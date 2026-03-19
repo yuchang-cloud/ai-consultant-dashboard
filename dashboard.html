@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script>
+    (function() {
+      var PASS = "20251118";
+      var KEY = "dashboard_auth";
+      if (sessionStorage.getItem(KEY) !== PASS) {
+        var input = prompt("请输入访问密码：");
+        if (input !== PASS) {
+          document.addEventListener("DOMContentLoaded", function() {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px;"><div style="font-size:48px;">🔒</div><div style="font-size:20px;color:#555;">密码错误，无权限访问</div><button onclick="location.reload()" style="margin-top:8px;padding:10px 24px;background:#3949ab;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;">重新输入</button></div>';
+          });
+          throw new Error("Access denied");
+        }
+        sessionStorage.setItem(KEY, PASS);
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI顾问数据看板</title>
