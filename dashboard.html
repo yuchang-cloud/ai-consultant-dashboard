@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI顾问数据看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f7; color: #333; min-height: 100vh; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 60%, #3949ab 100%);
+      color: white; padding: 18px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 3px 12px rgba(26,35,126,0.35);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.18); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+    .header-sub { font-size: 12px; opacity: 0.75; margin-top: 3px; }
+    .header-badge {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      padding: 5px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap;
+    }
+
+    /* ===== LAYOUT ===== */
+    .container { max-width: 1440px; margin: 0 auto; padding: 24px 20px 40px; }
+
+    /* ===== SECTION ===== */
+    .section { margin-bottom: 32px; }
+    .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .section-num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #1a237e; color: white;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+    .section-title { font-size: 17px; font-weight: 700; color: #1a237e; }
+    .section-note { font-size: 12px; color: #999; margin-left: 4px; }
+
+    /* ===== CARD ===== */
+    .card { background: white; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); padding: 20px; }
+
+    /* ===== KPI GRID ===== */
+    .kpi-grid { display: flex; flex-direction: column; gap: 14px; }
+    .kpi-row { display: grid; gap: 14px; }
+    .kpi-row-2 { grid-template-columns: repeat(2, 1fr); }
+    .kpi-row-3 { grid-template-columns: repeat(3, 1fr); }
+    .kpi-row-4 { grid-template-columns: repeat(4, 1fr); }
+    .kpi-row-5 { grid-template-columns: repeat(5, 1fr); }
+    .kpi-card {
+      background: white; border-radius: 14px;
+      padding: 18px 20px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-top: 4px solid;
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::after {
+      content: attr(data-icon); position: absolute;
+      right: 16px; bottom: 10px; font-size: 36px; opacity: 0.08;
+    }
+    .kpi-card.c-blue  { border-color: #1976d2; }
+    .kpi-card.c-green { border-color: #2e7d32; }
+    .kpi-card.c-amber { border-color: #e65100; }
+    .kpi-card.c-purple{ border-color: #6a1b9a; }
+    .kpi-card.c-teal  { border-color: #00695c; }
+    .kpi-card.c-red   { border-color: #c62828; }
+    .kpi-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .kpi-value { font-size: 30px; font-weight: 800; color: #1a237e; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: #aaa; margin-top: 6px; }
+    .kpi-vs { font-size: 11px; margin-top: 4px; }
+    .kpi-vs .up   { color: #2e7d32; }
+    .kpi-vs .down { color: #c62828; }
+    .kpi-vs .flat { color: #888; }
+
+    /* ===== CHART GRID ===== */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .chart-box { background: white; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); padding: 18px; }
+    .chart-title { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+    .chart-area { height: 260px; }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      background: white; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 12px 18px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .filter-label { font-size: 13px; color: #666; white-space: nowrap; font-weight: 500; }
+    .filter-btns { display: flex; gap: 6px; }
+    .fbtn {
+      padding: 3px 10px; border-radius: 6px; border: 1px solid #c5cae9;
+      background: #f5f5f5; font-size: 12px; cursor: pointer; color: #555;
+      transition: background 0.15s;
+    }
+    .fbtn:hover { background: #e8eaf6; color: #1a237e; }
+    .week-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .wchip {
+      padding: 4px 13px; border-radius: 20px;
+      border: 1.5px solid #c5cae9; background: white;
+      color: #666; font-size: 12px; cursor: pointer;
+      transition: all 0.15s; user-select: none;
+    }
+    .wchip:hover:not(.sel) { border-color: #7986cb; color: #3949ab; }
+    .wchip.sel { background: #1a237e; color: white; border-color: #1a237e; font-weight: 500; }
+    .wchip.summary-chip.sel { background: #4a148c; border-color: #4a148c; }
+    .wchip.upcoming-chip { opacity: 0.45; }
+    .chip-ended {
+      display: inline-block; background: #e0e0e0; color: #888;
+      font-size: 9px; padding: 0px 4px; border-radius: 3px;
+      margin-left: 3px; vertical-align: middle; font-weight: 400;
+    }
+    .wchip.sel .chip-ended { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); }
+
+    /* ===== TABLE ===== */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    thead th {
+      background: #e8eaf6; color: #283593; font-weight: 600;
+      padding: 9px 11px; text-align: center;
+      border: 1px solid #d0d5e8; white-space: nowrap;
+    }
+    thead th.grp { background: #c5cae9; font-size: 12px; }
+    tbody td {
+      padding: 7px 11px; text-align: center;
+      border: 1px solid #eef0f8; white-space: nowrap;
+    }
+    tbody tr.ai-row    { background: #eef4ff; }
+    tbody tr.ai-row:hover    { background: #dce8ff; }
+    tbody tr.human-row { background: #fdf6ee; }
+    tbody tr.human-row:hover { background: #faecd8; }
+    tbody tr.summary-ai   { background: #dde8f8 !important; font-weight: 600; }
+    tbody tr.summary-human { background: #f5ede0 !important; font-weight: 600; }
+    tbody tr.week-divider td { border-top: 2px solid #c5cae9 !important; }
+
+    .badge {
+      display: inline-block; padding: 2px 9px; border-radius: 4px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .badge-ai    { background: #c7d9f8; color: #1a3a8f; }
+    .badge-human { background: #f5ddb8; color: #7a4500; }
+    .badge-ended {
+      display: inline-block; padding: 1px 5px; border-radius: 3px;
+      font-size: 10px; font-weight: 500; color: #999; background: #ebebeb;
+      margin-left: 5px; vertical-align: middle;
+    }
+
+    /* AI vs 真人 差值标注 */
+    .diff-up   { color: #1b8c3e; font-size: 11px; font-weight: 500; }
+    .diff-down { color: #c0392b; font-size: 11px; font-weight: 500; }
+
+    /* ===== TREND CHART ===== */
+    .trend-chart-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;
+    }
+    .trend-chart-box {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      padding: 16px 18px 10px;
+    }
+    .trend-chart-title {
+      font-size: 13px; font-weight: 600; color: #444; margin-bottom: 2px;
+    }
+    .trend-chart-area { height: 260px; }
+    @media (max-width: 900px) { .trend-chart-row { grid-template-columns: 1fr; } }
+
+    /* ===== 列组分隔边框 ===== */
+    .sep-l  { border-left:  2.5px solid #5c6bc0 !important; }
+    .sep-r  { border-right: 2.5px solid #5c6bc0 !important; }
+    .sep-lr { border-left:  2.5px solid #5c6bc0 !important;
+              border-right: 2.5px solid #5c6bc0 !important; }
+
+    /* ===== TABS ===== */
+    .tab-nav {
+      display: flex; gap: 0; border-bottom: 2px solid #e8eaf6;
+      margin-bottom: 18px; overflow-x: auto; flex-shrink: 0;
+    }
+    .tab-btn {
+      padding: 10px 18px; cursor: pointer; font-size: 13px;
+      color: #888; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; white-space: nowrap;
+      transition: color 0.15s; user-select: none;
+    }
+    .tab-btn:hover:not(.active) { color: #3949ab; }
+    .tab-btn.active { color: #1a237e; border-bottom-color: #1a237e; font-weight: 600; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .kpi-row-2 { grid-template-columns: repeat(2, 1fr); }
+      .kpi-row-5 { grid-template-columns: repeat(3, 1fr); }
+      .kpi-row-4 { grid-template-columns: repeat(2, 1fr); }
+      .header h1 { font-size: 16px; }
+    }
+    @media (max-width: 600px) {
+      .kpi-row-2 { grid-template-columns: repeat(2, 1fr); }
+      .kpi-row-5 { grid-template-columns: repeat(2, 1fr); }
+      .kpi-row-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">📊</div>
+    <div>
+      <div class="header h1" style="font-size:20px;font-weight:700;letter-spacing:.5px;">AI顾问数据看板</div>
+      <div class="header-sub">数据范围：约课日期 2025-12-22 起 &nbsp;|&nbsp; 数据来源：Mario 模板 #24773 &nbsp;|&nbsp; 7日内数据 = 截止D6</div>
+    </div>
+  </div>
+  <div class="header-badge">最后更新：2026-03-18</div>
+</div>
+
+<div class="container">
+
+  <!-- =============== MODULE 1 =============== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">1</span>
+      <span class="section-title">AI顾问 整体数据</span>
+      <span class="section-note">全周期汇总</span>
+    </div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+  </div>
+
+  <!-- =============== MODULE 2 =============== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">2</span>
+      <span class="section-title">AI顾问 &amp; 真人顾问 数据对比</span>
+      <span class="section-note">按学习周倒序；多选学习周</span>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-label">📅 选择学习周：</span>
+      <div class="filter-btns">
+        <button class="fbtn" id="m2-all">全选</button>
+        <button class="fbtn" id="m2-clear">清空</button>
+        <button class="fbtn" id="m2-recent">近4周</button>
+      </div>
+      <div class="week-chips" id="chips-m2"></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" style="min-width:70px">统计周期</th>
+              <th rowspan="2" style="min-width:80px">顾问类型</th>
+              <th rowspan="2">分配人数</th>
+              <th rowspan="2" class="sep-lr">加微率</th>
+              <th colspan="4" class="grp sep-l">7日内整体数据</th>
+              <th colspan="4" class="grp sep-lr">7日内加微数据</th>
+            </tr>
+            <tr>
+              <th class="sep-l">到课率</th>
+              <th>完课率</th>
+              <th>转化率</th>
+              <th class="sep-r">完课转化率</th>
+              <th class="sep-l">加微到课率</th>
+              <th>加微完课率</th>
+              <th>加微转化率</th>
+              <th class="sep-r">加微完课转化率</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-m2"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="trend-chart-row">
+      <div class="trend-chart-box">
+        <div class="trend-chart-title">转化率</div>
+        <div class="trend-chart-area" id="chart-m2-xf"></div>
+      </div>
+      <div class="trend-chart-box">
+        <div class="trend-chart-title">加微转化率</div>
+        <div class="trend-chart-area" id="chart-m2-jwxf"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== MODULE 3 =============== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">3</span>
+      <span class="section-title">分渠道 数据对比</span>
+      <span class="section-note">学习周选择对所有渠道生效</span>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-label">📅 选择学习周：</span>
+      <div class="filter-btns">
+        <button class="fbtn" id="m3-all">全选</button>
+        <button class="fbtn" id="m3-clear">清空</button>
+        <button class="fbtn" id="m3-recent">近4周</button>
+      </div>
+      <div class="week-chips" id="chips-m3"></div>
+    </div>
+    <div class="card">
+      <div class="tab-nav" id="channel-tabs"></div>
+      <div id="channel-panes"></div>
+    </div>
+    <div class="trend-chart-row">
+      <div class="trend-chart-box">
+        <div class="trend-chart-title" id="chart-m3-title-xf">转化率</div>
+        <div class="trend-chart-area" id="chart-m3-xf"></div>
+      </div>
+      <div class="trend-chart-box">
+        <div class="trend-chart-title" id="chart-m3-title-jwxf">加微转化率</div>
+        <div class="trend-chart-area" id="chart-m3-jwxf"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const WEEKS = ["03-23周", "03-16周", "03-09周", "03-02周", "02-23周", "02-16周", "02-09周", "02-02周", "01-26周", "01-19周", "01-12周", "01-05周", "12-29周", "12-22周"];
+const ALL_WEEKS = ['汇总', ...WEEKS];
+
+// ── 真实数据：每格只存原始人数 n/jw/dk/wk/xf/jw_dk/jw_wk/jw_xf/jw_wk_xf ──
+// 所有"率"在 JS 端用 分子÷分母 实时计算，不存预计算的比率
+const MAIN_DATA = {"03-23周":{"AI顾问":{"n":12,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":19,"jw":7,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":161,"jw":42,"dk":18,"wk":11,"xf":1,"jw_dk":15,"jw_wk":11,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":275,"jw":171,"dk":58,"wk":39,"xf":4,"jw_dk":50,"jw_wk":36,"jw_xf":4,"jw_wk_xf":4}},"03-09周":{"AI顾问":{"n":65,"jw":49,"dk":55,"wk":38,"xf":5,"jw_dk":44,"jw_wk":34,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":566,"jw":415,"dk":355,"wk":241,"xf":54,"jw_dk":314,"jw_wk":224,"jw_xf":51,"jw_wk_xf":51}},"03-02周":{"AI顾问":{"n":100,"jw":53,"dk":63,"wk":40,"xf":9,"jw_dk":45,"jw_wk":26,"jw_xf":7,"jw_wk_xf":7},"真人顾问":{"n":516,"jw":390,"dk":349,"wk":214,"xf":51,"jw_dk":296,"jw_wk":194,"jw_xf":51,"jw_wk_xf":51}},"02-23周":{"AI顾问":{"n":56,"jw":41,"dk":44,"wk":33,"xf":6,"jw_dk":38,"jw_wk":29,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":472,"jw":356,"dk":307,"wk":233,"xf":57,"jw_dk":269,"jw_wk":216,"jw_xf":55,"jw_wk_xf":55}},"02-16周":{"AI顾问":{"n":151,"jw":82,"dk":121,"wk":78,"xf":14,"jw_dk":73,"jw_wk":50,"jw_xf":12,"jw_wk_xf":12},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":157,"jw":90,"dk":127,"wk":80,"xf":6,"jw_dk":76,"jw_wk":55,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":125,"jw":88,"dk":106,"wk":78,"xf":11,"jw_dk":81,"jw_wk":66,"jw_xf":9,"jw_wk_xf":9}},"02-02周":{"AI顾问":{"n":93,"jw":64,"dk":82,"wk":58,"xf":5,"jw_dk":57,"jw_wk":45,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":512,"jw":391,"dk":466,"wk":327,"xf":48,"jw_dk":366,"jw_wk":277,"jw_xf":46,"jw_wk_xf":46}},"01-26周":{"AI顾问":{"n":22,"jw":14,"dk":20,"wk":14,"xf":3,"jw_dk":13,"jw_wk":11,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":496,"jw":391,"dk":443,"wk":313,"xf":58,"jw_dk":365,"jw_wk":274,"jw_xf":55,"jw_wk_xf":55}},"01-19周":{"AI顾问":{"n":31,"jw":22,"dk":28,"wk":15,"xf":4,"jw_dk":21,"jw_wk":14,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":596,"jw":425,"dk":527,"wk":370,"xf":45,"jw_dk":386,"jw_wk":295,"jw_xf":40,"jw_wk_xf":40}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":485,"jw":304,"dk":398,"wk":223,"xf":45,"jw_dk":275,"jw_wk":197,"jw_xf":45,"jw_wk_xf":45}},"01-05周":{"AI顾问":{"n":9,"jw":7,"dk":8,"wk":4,"xf":2,"jw_dk":6,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":572,"jw":379,"dk":475,"wk":319,"xf":59,"jw_dk":345,"jw_wk":278,"jw_xf":58,"jw_wk_xf":58}},"12-29周":{"AI顾问":{"n":13,"jw":8,"dk":9,"wk":6,"xf":2,"jw_dk":7,"jw_wk":6,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":390,"jw":215,"dk":317,"wk":188,"xf":29,"jw_dk":196,"jw_wk":152,"jw_xf":28,"jw_wk_xf":28}},"12-22周":{"AI顾问":{"n":20,"jw":9,"dk":16,"wk":9,"xf":1,"jw_dk":8,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":404,"jw":220,"dk":311,"wk":152,"xf":36,"jw_dk":196,"jw_wk":134,"jw_xf":34,"jw_wk_xf":34}}};
+
+const CHANNELS = [
+  { id: 'zebra-paid',  name: '斑马AI学App-付费购买' },
+  { id: 'points-mall', name: '积分商城' },
+  { id: 'oral-app',    name: '口语App' },
+  { id: 'xiaohongshu', name: '投放渠道-小红书' },
+  { id: 'weibo',       name: '投放渠道-微博' },
+];
+
+const CHANNEL_DATA = {"zebra-paid":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":1,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":21,"jw":15,"dk":9,"wk":5,"xf":0,"jw_dk":7,"jw_wk":5,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":51,"jw":43,"dk":29,"wk":22,"xf":2,"jw_dk":25,"jw_wk":20,"jw_xf":2,"jw_wk_xf":2}},"03-09周":{"AI顾问":{"n":44,"jw":36,"dk":39,"wk":26,"xf":4,"jw_dk":34,"jw_wk":26,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":191,"jw":161,"dk":171,"wk":115,"xf":23,"jw_dk":146,"jw_wk":103,"jw_xf":21,"jw_wk_xf":21}},"03-02周":{"AI顾问":{"n":56,"jw":37,"dk":44,"wk":28,"xf":6,"jw_dk":32,"jw_wk":18,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":220,"jw":178,"dk":187,"wk":105,"xf":25,"jw_dk":157,"jw_wk":96,"jw_xf":25,"jw_wk_xf":25}},"02-23周":{"AI顾问":{"n":28,"jw":21,"dk":23,"wk":18,"xf":3,"jw_dk":20,"jw_wk":16,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":95,"jw":81,"dk":88,"wk":70,"xf":24,"jw_dk":77,"jw_wk":64,"jw_xf":23,"jw_wk_xf":23}},"02-16周":{"AI顾问":{"n":88,"jw":52,"dk":69,"wk":48,"xf":9,"jw_dk":46,"jw_wk":33,"jw_xf":8,"jw_wk_xf":8},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":102,"jw":62,"dk":80,"wk":50,"xf":3,"jw_dk":51,"jw_wk":36,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":70,"jw":54,"dk":62,"wk":43,"xf":8,"jw_dk":50,"jw_wk":38,"jw_xf":6,"jw_wk_xf":6}},"02-02周":{"AI顾问":{"n":60,"jw":45,"dk":52,"wk":41,"xf":4,"jw_dk":40,"jw_wk":34,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":327,"jw":262,"dk":297,"wk":210,"xf":36,"jw_dk":245,"jw_wk":186,"jw_xf":35,"jw_wk_xf":35}},"01-26周":{"AI顾问":{"n":15,"jw":10,"dk":14,"wk":9,"xf":1,"jw_dk":10,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":285,"jw":235,"dk":251,"wk":181,"xf":35,"jw_dk":217,"jw_wk":164,"jw_xf":33,"jw_wk_xf":33}},"01-19周":{"AI顾问":{"n":12,"jw":11,"dk":11,"wk":8,"xf":4,"jw_dk":11,"jw_wk":8,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":238,"jw":191,"dk":218,"wk":149,"xf":21,"jw_dk":174,"jw_wk":122,"jw_xf":17,"jw_wk_xf":17}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":159,"jw":142,"dk":146,"wk":137,"xf":28,"jw_dk":132,"jw_wk":125,"jw_xf":28,"jw_wk_xf":28}},"01-05周":{"AI顾问":{"n":5,"jw":5,"dk":5,"wk":4,"xf":2,"jw_dk":5,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":298,"jw":263,"dk":275,"wk":253,"xf":47,"jw_dk":245,"jw_wk":230,"jw_xf":47,"jw_wk_xf":47}},"12-29周":{"AI顾问":{"n":4,"jw":3,"dk":3,"wk":3,"xf":1,"jw_dk":3,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":155,"jw":121,"dk":147,"wk":134,"xf":22,"jw_dk":116,"jw_wk":107,"jw_xf":21,"jw_wk_xf":21}},"12-22周":{"AI顾问":{"n":7,"jw":6,"dk":5,"wk":5,"xf":1,"jw_dk":5,"jw_wk":5,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":111,"jw":98,"dk":109,"wk":100,"xf":28,"jw_dk":96,"jw_wk":90,"jw_xf":26,"jw_wk_xf":26}}},"points-mall":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":3,"dk":3,"wk":2,"xf":1,"jw_dk":3,"jw_wk":2,"jw_xf":1,"jw_wk_xf":1}},"03-02周":{"AI顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":7,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":5,"jw":3,"dk":3,"wk":2,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":15,"jw":3,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"oral-app":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":5,"jw":2,"dk":2,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":14,"jw":9,"dk":10,"wk":4,"xf":0,"jw_dk":7,"jw_wk":3,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":16,"jw":10,"dk":14,"wk":11,"xf":1,"jw_dk":8,"jw_wk":7,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":48,"jw":37,"dk":37,"wk":18,"xf":5,"jw_dk":28,"jw_wk":16,"jw_xf":4,"jw_wk_xf":4}},"03-02周":{"AI顾问":{"n":12,"jw":9,"dk":12,"wk":7,"xf":3,"jw_dk":9,"jw_wk":5,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":51,"jw":32,"dk":45,"wk":25,"xf":6,"jw_dk":30,"jw_wk":20,"jw_xf":6,"jw_wk_xf":6}},"02-23周":{"AI顾问":{"n":3,"jw":1,"dk":2,"wk":2,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":39,"jw":29,"dk":33,"wk":13,"xf":3,"jw_dk":24,"jw_wk":12,"jw_xf":3,"jw_wk_xf":3}},"02-16周":{"AI顾问":{"n":28,"jw":13,"dk":25,"wk":14,"xf":3,"jw_dk":11,"jw_wk":7,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":22,"jw":11,"dk":19,"wk":9,"xf":3,"jw_dk":10,"jw_wk":6,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":13,"jw":8,"dk":10,"wk":6,"xf":2,"jw_dk":7,"jw_wk":5,"jw_xf":2,"jw_wk_xf":2}},"02-02周":{"AI顾问":{"n":9,"jw":5,"dk":9,"wk":5,"xf":0,"jw_dk":5,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":41,"jw":30,"dk":39,"wk":21,"xf":3,"jw_dk":28,"jw_wk":16,"jw_xf":3,"jw_wk_xf":3}},"01-26周":{"AI顾问":{"n":2,"jw":1,"dk":2,"wk":2,"xf":2,"jw_dk":1,"jw_wk":1,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":49,"jw":36,"dk":46,"wk":26,"xf":9,"jw_dk":33,"jw_wk":20,"jw_xf":8,"jw_wk_xf":8}},"01-19周":{"AI顾问":{"n":3,"jw":1,"dk":3,"wk":1,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":54,"jw":32,"dk":40,"wk":23,"xf":5,"jw_dk":27,"jw_wk":18,"jw_xf":4,"jw_wk_xf":4}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":325,"jw":162,"dk":252,"wk":86,"xf":17,"jw_dk":143,"jw_wk":72,"jw_xf":17,"jw_wk_xf":17}},"01-05周":{"AI顾问":{"n":4,"jw":2,"dk":3,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":274,"jw":116,"dk":200,"wk":66,"xf":12,"jw_dk":100,"jw_wk":48,"jw_xf":11,"jw_wk_xf":11}},"12-29周":{"AI顾问":{"n":9,"jw":5,"dk":6,"wk":3,"xf":1,"jw_dk":4,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":235,"jw":94,"dk":170,"wk":54,"xf":7,"jw_dk":80,"jw_wk":45,"jw_xf":7,"jw_wk_xf":7}},"12-22周":{"AI顾问":{"n":13,"jw":3,"dk":11,"wk":4,"xf":0,"jw_dk":3,"jw_wk":3,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":278,"jw":119,"dk":201,"wk":52,"xf":8,"jw_dk":99,"jw_wk":44,"jw_xf":8,"jw_wk_xf":8}}},"xiaohongshu":{"03-23周":{"AI顾问":{"n":10,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":13,"jw":5,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":86,"jw":22,"dk":7,"wk":5,"xf":1,"jw_dk":7,"jw_wk":5,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":144,"jw":85,"dk":14,"wk":9,"xf":1,"jw_dk":14,"jw_wk":9,"jw_xf":1,"jw_wk_xf":1}},"03-09周":{"AI顾问":{"n":4,"jw":2,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":299,"jw":197,"dk":130,"wk":94,"xf":23,"jw_dk":124,"jw_wk":92,"jw_xf":23,"jw_wk_xf":23}},"03-02周":{"AI顾问":{"n":30,"jw":6,"dk":6,"wk":4,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":245,"jw":180,"dk":117,"wk":84,"xf":20,"jw_dk":109,"jw_wk":78,"jw_xf":20,"jw_wk_xf":20}},"02-23周":{"AI顾问":{"n":13,"jw":11,"dk":10,"wk":6,"xf":1,"jw_dk":10,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":304,"jw":222,"dk":157,"wk":129,"xf":27,"jw_dk":148,"jw_wk":123,"jw_xf":26,"jw_wk_xf":26}},"02-16周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":2,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"weibo":{"03-23周":{"AI顾问":{"n":2,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":5,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":49,"jw":3,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":66,"jw":34,"dk":5,"wk":4,"xf":1,"jw_dk":4,"jw_wk":4,"jw_xf":1,"jw_wk_xf":1}},"03-09周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":25,"jw":17,"dk":14,"wk":12,"xf":2,"jw_dk":13,"jw_wk":11,"jw_xf":2,"jw_wk_xf":2}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}}};
+
+// ══════════════════════════════════════════════════════════════
+// 【数据逻辑说明】（由 update_dashboard.py 每日自动更新）
+//
+// 数据来源：Mario SQL模板 #24773（斑马口语-试听课-用户明细）
+// 约课日期 = 上课日期(study_date) = Excel中的"上课日期"字段
+// 数据范围：约课日期 >= 2025-12-22
+// 数据截止：每日12:00刷新，呈现截止到昨天的最新数据
+//
+// ── 顾问分类 ──
+//   AI顾问  ：mentor_ldap IN ('zhongdong','zhangyuqingbj03','zhanghuijiebj')
+//   真人顾问 ：其余有效LDAP（排除 wuqiongzz02 和 空白，这两类不纳入任何统计）
+//
+// ── 渠道分类（基于 keyfrom / 用户来源（一级）/ 投放渠道（二级））──
+//   zebra-paid   斑马AI学App-付费购买 : keyfrom=app-* | keyfrom=gwlj | 用户来源=集团流量
+//   oral-app     口语App              : keyfrom=kyapp-*
+//   xiaohongshu  投放渠道-小红书       : 投放渠道（二级）含"小红书"
+//   weibo        投放渠道-微博         : 投放渠道（二级）含"微博"
+//   points-mall  积分商城             : 投放渠道（二级）含"商城/赠课/商务合作"
+//
+// ── 数据字段（每格只存原始人数，所有"率"在JS端实时计算）──
+//   n      : 分配人数（按用户ID去重）
+//   jw     : 加微人数（是否加微 = 1）
+//   dk     : 到课人数（是否到课（截止D6）= 1）
+//   wk     : 完课人数（是否完课（截止D6）= 1）
+//   xf     : 转化人数（是否续费（截止D6）= 1）
+//   jw_dk  : 加微且到课人数
+//   jw_wk  : 加微且完课人数
+//   jw_xf  : 加微且转化人数
+//   jw_wk_xf: 加微且完课且转化人数
+//   注：同一用户在同一周多条记录时，各二分字段取 MAX（OR），再按用户ID去重
+//
+// ── 7日内数据 = 截止D6 ──
+//   约课当天=D0，之后6天=D1~D6，共7天转化窗口
+//   一周7天课 + D6 = 最晚数据在 week_start+6+6=week_start+12 天落齐
+//   isEnded(w)：week_start + 12 < 今天 → 该周数据已完全定型（标"结束"）
+//
+// ── 汇总计算原则 ──
+//   多周汇总：先将各周原始人数直接相加（分子分母分别累加），再除以对应分母
+//   严禁：不使用"各周比率的简单平均"，避免各周人数差异导致失真
+// ══════════════════════════════════════════════════════════════
+
+// ─────────────────────── HELPERS ───────────────────────
+
+// 今日日期（动态获取，用于判断学习周状态）
+const TODAY = new Date(); // 动态当前日期
+
+// 将 "03-16周" 解析为 Date（12月属于2025年，其余属于2026年）
+function parseWeekDate(w) {
+  const [m, d] = w.replace('周','').split('-').map(Number);
+  return new Date(m >= 10 ? 2025 : 2026, m - 1, d);
+}
+
+// 下周或更远（开始日期 > 今天）
+function isUpcoming(w) {
+  return w !== '汇总' && parseWeekDate(w) > TODAY;
+}
+
+// 已结束：约课周内最晚一天（start+6）的7日转化期（D6）已过，即 start+12 < 今天
+function isEnded(w) {
+  if (w === '汇总') return false;
+  const end = new Date(parseWeekDate(w).getTime() + 12 * 86400000);
+  return TODAY > end;
+}
+
+// 默认选中：汇总 + 当前周起往前4周（排除未来周）
+function getDefaultWeeks() {
+  const nonUpcoming = WEEKS.filter(w => !isUpcoming(w));
+  return new Set(['汇总', ...nonUpcoming.slice(0, 4)]);
+}
+
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function mc(v) {
+  if (v >= 0.50) return 'm-hi';
+  if (v >= 0.25) return 'm-mid';
+  return 'm-lo';
+}
+function d(a, b) { return b > 0 ? a / b : 0; } // safe divide
+
+/** 将原始人数对象转为所有"率"的展示对象 */
+function rates(c) {
+  return {
+    分配人数:     c.n,
+    转化人数:     c.xf,
+    加微率:       d(c.jw,     c.n),
+    到课率:       d(c.dk,     c.n),
+    完课率:       d(c.wk,     c.n),
+    转化率:       d(c.xf,     c.n),
+    完课转化率:   d(c.xf,     c.wk),
+    加微到课率:   d(c.jw_dk,  c.jw),
+    加微完课率:   d(c.jw_wk,  c.jw),
+    加微转化率:   d(c.jw_xf,  c.jw),
+    加微完课转化率: d(c.jw_wk_xf, c.jw_wk),
+  };
+}
+
+/** 汇总：把多周的原始人数直接相加，然后用 rates() 算比率 */
+function sumCounts(dataWeeks, dataset) {
+  const KEYS = ['n','jw','dk','wk','xf','jw_dk','jw_wk','jw_xf','jw_wk_xf'];
+  const types = ['AI顾问','真人顾问'];
+  const acc = {};
+  types.forEach(t => { acc[t] = {}; KEYS.forEach(k => acc[t][k] = 0); });
+  dataWeeks.forEach(w => {
+    if (!dataset[w]) return;
+    types.forEach(t => {
+      const d = dataset[w][t];
+      KEYS.forEach(k => acc[t][k] += (d[k] || 0));
+    });
+  });
+  return acc;
+}
+
+function computeSummary(dataWeeks, dataset) {
+  const acc = sumCounts(dataWeeks, dataset);
+  return {
+    'AI顾问':   rates(acc['AI顾问']),
+    '真人顾问': rates(acc['真人顾问']),
+  };
+}
+
+// ─────────────────────── MODULE 1 ───────────────────────
+
+function renderKPIs() {
+  const sum = computeSummary(WEEKS, MAIN_DATA);
+  const ai = sum['AI顾问'], hu = sum['真人顾问'];
+
+  const diff = (a, b) => {
+    if (!b) return '';
+    const d = ((a - b) * 100).toFixed(1); // 百分点绝对差
+    return +d > 0
+      ? `<span class="up">▲ AI高出 ${d}%</span>`
+      : `<span class="down">▼ AI低于${Math.abs(d)}%</span>`;
+  };
+
+  const row1 = [
+    { lbl: 'AI顾问 累计分配人数', val: ai.分配人数.toLocaleString(), sub: `真人顾问 ${hu.分配人数.toLocaleString()} 人`, vs: '', color: 'c-blue',   icon: '👥' },
+    { lbl: 'AI顾问 转化人数',     val: ai.转化人数.toLocaleString(), sub: `真人顾问 ${hu.转化人数.toLocaleString()} 人`, vs: '', color: 'c-green',  icon: '✅' },
+    { lbl: 'AI顾问 转化率',       val: pct(ai.转化率), sub: `真人顾问 ${pct(hu.转化率)}`, vs: diff(ai.转化率, hu.转化率), color: 'c-purple', icon: '📈' },
+  ];
+
+  const row2 = [
+    { lbl: 'AI顾问 加微率',         val: pct(ai.加微率),         sub: `真人顾问 ${pct(hu.加微率)}`,         vs: diff(ai.加微率,         hu.加微率),         color: 'c-teal',   icon: '💬' },
+    { lbl: 'AI顾问 加微到课率',     val: pct(ai.加微到课率),     sub: `真人顾问 ${pct(hu.加微到课率)}`,     vs: diff(ai.加微到课率,     hu.加微到课率),     color: 'c-amber',  icon: '📖' },
+    { lbl: 'AI顾问 加微完课率',     val: pct(ai.加微完课率),     sub: `真人顾问 ${pct(hu.加微完课率)}`,     vs: diff(ai.加微完课率,     hu.加微完课率),     color: 'c-blue',   icon: '📝' },
+    { lbl: 'AI顾问 加微转化率',     val: pct(ai.加微转化率),     sub: `真人顾问 ${pct(hu.加微转化率)}`,     vs: diff(ai.加微转化率,     hu.加微转化率),     color: 'c-red',    icon: '💡' },
+    { lbl: 'AI顾问 加微完课转化率', val: pct(ai.加微完课转化率), sub: `真人顾问 ${pct(hu.加微完课转化率)}`, vs: diff(ai.加微完课转化率, hu.加微完课转化率), color: 'c-green',  icon: '🎯' },
+  ];
+
+  const cardHTML = k => `
+    <div class="kpi-card ${k.color}" data-icon="${k.icon}">
+      <div class="kpi-label">${k.lbl}</div>
+      <div class="kpi-value">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      ${k.vs ? `<div class="kpi-vs">${k.vs}</div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi-row kpi-row-3">${row1.map(cardHTML).join('')}</div>
+    <div class="kpi-row kpi-row-5">${row2.map(cardHTML).join('')}</div>
+  `;
+}
+
+
+// ─────────────────────── TABLE BUILDER ───────────────────────
+
+function buildTableRows(selectedWeeks, dataset) {
+  const allDataWeeks = WEEKS.filter(w => dataset[w]);
+  const summaryAcc = sumCounts(allDataWeeks, dataset);
+  const summaryRates = {
+    'AI顾问':   rates(summaryAcc['AI顾问']),
+    '真人顾问': rates(summaryAcc['真人顾问']),
+  };
+
+  // 差值标注：AI相对真人的百分点差
+  const diffTag = (aiVal, huVal) => {
+    const d = (aiVal - huVal) * 100;
+    if (Math.abs(d) < 0.05) return '';
+    const sign = d > 0 ? '+' : '';
+    const cls  = d > 0 ? 'diff-up' : 'diff-down';
+    return ` <span class="${cls}">(${sign}${d.toFixed(1)}%)</span>`;
+  };
+
+  // RATE_KEYS 顺序对应 thead 列：加微率 | 到课率..完课转化率 | 加微到课率..加微完课转化率
+  const RATE_KEYS = ['加微率','到课率','完课率','转化率','完课转化率',
+                     '加微到课率','加微完课率','加微转化率','加微完课转化率'];
+  // 每列对应的边框分隔 class
+  const COL_SEP = ['sep-lr','sep-l','','','sep-r','sep-l','','','sep-r'];
+
+  const rows = [];
+  selectedWeeks.forEach((week, idx) => {
+    const isSummary = week === '汇总';
+    const ai = isSummary ? summaryRates['AI顾问']   : (dataset[week] ? rates(dataset[week]['AI顾问'])   : null);
+    const hu = isSummary ? summaryRates['真人顾问'] : (dataset[week] ? rates(dataset[week]['真人顾问']) : null);
+    if (!ai || !hu) return;
+
+    const aiCls  = isSummary ? 'summary-ai'   : 'ai-row';
+    const huCls  = isSummary ? 'summary-human' : 'human-row';
+    const divCls = idx > 0 ? 'week-divider' : '';
+    const wStyle = `font-weight:${isSummary ? '700' : '400'}`;
+    const endedTag = (!isSummary && isEnded(week)) ? '<span class="badge-ended">结束</span>' : '';
+
+    const aiRateCells = RATE_KEYS.map((k, i) =>
+      `<td class="${COL_SEP[i]}">${pct(ai[k])}${diffTag(ai[k], hu[k])}</td>`
+    ).join('');
+    const huRateCells = RATE_KEYS.map((k, i) =>
+      `<td class="${COL_SEP[i]}">${pct(hu[k])}</td>`
+    ).join('');
+
+    rows.push(`
+      <tr class="${aiCls} ${divCls}">
+        <td rowspan="2" style="${wStyle};vertical-align:middle;text-align:center;">${week}${endedTag}</td>
+        <td><span class="badge badge-ai">AI顾问</span></td>
+        <td>${ai.分配人数.toLocaleString()}</td>
+        ${aiRateCells}
+      </tr>
+      <tr class="${huCls}">
+        <td><span class="badge badge-human">真人顾问</span></td>
+        <td>${hu.分配人数.toLocaleString()}</td>
+        ${huRateCells}
+      </tr>
+    `);
+  });
+  return rows.join('');
+}
+
+// ─────────────────────── WEEK CHIP LOGIC ───────────────────────
+
+function makeChips(containerId, selected, onChange) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = ALL_WEEKS.map(w => {
+    const upcoming = isUpcoming(w);
+    const ended    = isEnded(w);
+    const endedTag = ended ? '<span class="chip-ended">结束</span>' : '';
+    const cls = [
+      'wchip',
+      selected.has(w) ? 'sel' : '',
+      w === '汇总'  ? 'summary-chip'  : '',
+      upcoming      ? 'upcoming-chip' : '',
+    ].filter(Boolean).join(' ');
+    return `<div class="${cls}" data-week="${w}">${w}${endedTag}</div>`;
+  }).join('');
+  el.querySelectorAll('.wchip').forEach(c => {
+    c.addEventListener('click', () => {
+      const w = c.dataset.week;
+      selected.has(w) ? selected.delete(w) : selected.add(w);
+      onChange();
+    });
+  });
+}
+
+function orderedSelected(sel) {
+  return ALL_WEEKS.filter(w => sel.has(w));
+}
+
+// ─────────────────────── CHART HELPER ───────────────────────
+
+const CHART_WEEKS = WEEKS.slice(0, WEEKS.indexOf('02-02周') + 1).reverse(); // 02-02周起，时间正序
+const C_AI   = '#7c3aed'; // 紫色 - AI顾问
+const C_HUMAN = '#ea6c00'; // 橙色 - 真人顾问
+
+function getSeries(dataset, field, denomField) {
+  return {
+    ai:   CHART_WEEKS.map(w => {
+      if (!dataset[w]) return null;
+      const den = dataset[w]['AI顾问'][denomField];
+      return den > 0 ? +(dataset[w]['AI顾问'][field] / den * 100).toFixed(2) : null;
+    }),
+    hu: CHART_WEEKS.map(w => {
+      if (!dataset[w]) return null;
+      const den = dataset[w]['真人顾问'][denomField];
+      return den > 0 ? +(dataset[w]['真人顾问'][field] / den * 100).toFixed(2) : null;
+    }),
+  };
+}
+
+function buildSingleOption(aiData, huData) {
+  const mkSeries = (name, data, color, labelPos) => ({
+    name, type: 'line', data,
+    connectNulls: true,
+    smooth: false,
+    itemStyle: { color },
+    lineStyle: { color, width: 2.5 },
+    symbol: 'circle', symbolSize: 6,
+    label: {
+      show: true,
+      position: labelPos,
+      fontSize: 10,
+      color: color,
+      fontWeight: 500,
+      formatter: p => (p.value != null && p.value > 0) ? p.value.toFixed(1) + '%' : '',
+    },
+    labelLayout: { hideOverlap: true },
+  });
+
+  return {
+    tooltip: {
+      trigger: 'axis',
+      formatter: params => {
+        let s = `<b>${params[0].axisValue}</b><br>`;
+        params.forEach(p => {
+          s += `${p.marker}${p.seriesName}：${p.value != null ? p.value.toFixed(1) + '%' : '-'}<br>`;
+        });
+        return s;
+      }
+    },
+    legend: {
+      data: ['AI顾问', '真人顾问'],
+      bottom: 0, itemWidth: 16, itemHeight: 10,
+      textStyle: { fontSize: 12 },
+    },
+    grid: { left: 46, right: 16, top: 28, bottom: 44 },
+    xAxis: {
+      type: 'category', data: CHART_WEEKS,
+      axisLabel: { fontSize: 10, rotate: 30, interval: 0 },
+    },
+    yAxis: {
+      type: 'value', min: 0,
+      axisLabel: { fontSize: 10, formatter: v => v + '%' },
+      splitLine: { lineStyle: { color: '#eef0f8' } },
+    },
+    series: [
+      mkSeries('AI顾问',   aiData, C_AI,    'top'),
+      mkSeries('真人顾问', huData, C_HUMAN, 'bottom'),
+    ],
+  };
+}
+
+let _cM2xf, _cM2jwxf, _cM3xf, _cM3jwxf;
+
+function renderM2Chart() {
+  const xf   = getSeries(MAIN_DATA, 'xf',    'n');
+  const jwxf = getSeries(MAIN_DATA, 'jw_xf', 'jw');
+  if (!_cM2xf)   _cM2xf   = echarts.init(document.getElementById('chart-m2-xf'));
+  if (!_cM2jwxf) _cM2jwxf = echarts.init(document.getElementById('chart-m2-jwxf'));
+  _cM2xf.setOption(buildSingleOption(xf.ai, xf.hu), true);
+  _cM2jwxf.setOption(buildSingleOption(jwxf.ai, jwxf.hu), true);
+}
+
+function renderM3Chart() {
+  const ch = CHANNEL_DATA[activeChannel];
+  const chName = CHANNELS.find(c => c.id === activeChannel)?.name || '';
+  document.getElementById('chart-m3-title-xf').textContent   = `转化率`;
+  document.getElementById('chart-m3-title-jwxf').textContent = `加微转化率`;
+  const xf   = getSeries(ch, 'xf',    'n');
+  const jwxf = getSeries(ch, 'jw_xf', 'jw');
+  if (!_cM3xf)   _cM3xf   = echarts.init(document.getElementById('chart-m3-xf'));
+  if (!_cM3jwxf) _cM3jwxf = echarts.init(document.getElementById('chart-m3-jwxf'));
+  _cM3xf.setOption(buildSingleOption(xf.ai, xf.hu), true);
+  _cM3jwxf.setOption(buildSingleOption(jwxf.ai, jwxf.hu), true);
+}
+
+window.addEventListener('resize', () => {
+  [_cM2xf, _cM2jwxf, _cM3xf, _cM3jwxf].forEach(c => c?.resize());
+});
+
+// ─────────────────────── MODULE 2 ───────────────────────
+
+const selM2 = getDefaultWeeks();
+
+function renderM2() {
+  makeChips('chips-m2', selM2, renderM2);
+  document.getElementById('tbody-m2').innerHTML =
+    buildTableRows(orderedSelected(selM2), MAIN_DATA);
+  renderM2Chart();
+}
+
+document.getElementById('m2-all').onclick    = () => { ALL_WEEKS.forEach(w => selM2.add(w)); renderM2(); };
+document.getElementById('m2-clear').onclick  = () => { selM2.clear(); selM2.add('汇总'); renderM2(); };
+document.getElementById('m2-recent').onclick = () => { selM2.clear(); getDefaultWeeks().forEach(w => selM2.add(w)); renderM2(); };
+
+// ─────────────────────── MODULE 3 ───────────────────────
+
+const selM3 = getDefaultWeeks();
+let activeChannel = CHANNELS[0].id;
+
+function channelTableHTML(chId) {
+  const rows = buildTableRows(orderedSelected(selM3), CHANNEL_DATA[chId]);
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2" style="min-width:70px">统计周期</th>
+            <th rowspan="2" style="min-width:80px">顾问类型</th>
+            <th rowspan="2">分配人数</th>
+            <th rowspan="2" class="sep-lr">加微率</th>
+            <th colspan="4" class="grp sep-l">7日内整体数据</th>
+            <th colspan="4" class="grp sep-lr">7日内加微数据</th>
+          </tr>
+          <tr>
+            <th class="sep-l">到课率</th><th>完课率</th><th>转化率</th><th class="sep-r">完课转化率</th>
+            <th class="sep-l">加微到课率</th><th>加微完课率</th><th>加微转化率</th><th class="sep-r">加微完课转化率</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderM3() {
+  makeChips('chips-m3', selM3, renderM3);
+  document.getElementById('channel-tabs').innerHTML = CHANNELS.map(ch => `
+    <div class="tab-btn ${ch.id === activeChannel ? 'active' : ''}" data-ch="${ch.id}">${ch.name}</div>
+  `).join('');
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeChannel = btn.dataset.ch; renderM3(); });
+  });
+  document.getElementById('channel-panes').innerHTML = CHANNELS.map(ch => `
+    <div class="tab-pane ${ch.id === activeChannel ? 'active' : ''}" id="pane-${ch.id}">
+      ${channelTableHTML(ch.id)}
+    </div>
+  `).join('');
+  renderM3Chart();
+}
+
+document.getElementById('m3-all').onclick    = () => { ALL_WEEKS.forEach(w => selM3.add(w)); renderM3(); };
+document.getElementById('m3-clear').onclick  = () => { selM3.clear(); selM3.add('汇总'); renderM3(); };
+document.getElementById('m3-recent').onclick = () => { selM3.clear(); getDefaultWeeks().forEach(w => selM3.add(w)); renderM3(); };
+
+// ─────────────────────── INIT ───────────────────────
+
+renderKPIs();
+renderM2();
+renderM3();
+
+</script>
+</body>
+</html>

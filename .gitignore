@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# 日志（不需要同步到 GitHub）
+*.log
+
+# macOS
+.DS_Store
