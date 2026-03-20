@@ -1,0 +1,41 @@
+name: Refresh Dashboard
+
+on:
+  workflow_dispatch:       # 允许手动触发（网页按钮调用 GitHub API）
+  schedule:
+    - cron: '0 4 * * *'   # 每天 UTC 04:00 = 北京时间 12:00，作为自动兜底
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 允许写入并推送 dashboard.html
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Configure Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run update script
+        env:
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+        run: python update_dashboard.py
+
+      - name: Upload log (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-update-log
+          path: dashboard_update.log

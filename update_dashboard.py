@@ -14,6 +14,7 @@ import csv
 import io
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
@@ -27,10 +28,13 @@ import requests
 # ═══════════════════════════════ 配置 ═══════════════════════════════
 
 MCP_URL     = "https://bigdata-mcp.zhenguanyu.com/mcp"
-MCP_TOKEN   = "qcugTRqOjTfQslFzLsUkqmXobeQLfbNj"
+# 优先读取环境变量（GitHub Actions 中由 Secret 注入），回退到本地默认值
+MCP_TOKEN   = os.environ.get("MCP_TOKEN", "qcugTRqOjTfQslFzLsUkqmXobeQLfbNj")
 TEMPLATE_ID = 24773
-DASHBOARD   = Path("/Users/yuchang/Documents/AI_consultant_data/dashboard.html")
-LOG_FILE    = Path("/Users/yuchang/Documents/AI_consultant_data/dashboard_update.log")
+# 使用脚本所在目录的相对路径，本地和 GitHub Actions 均适用
+BASE_DIR    = Path(__file__).parent
+DASHBOARD   = BASE_DIR / "dashboard.html"
+LOG_FILE    = BASE_DIR / "dashboard_update.log"
 
 # 数据起始约课日期（固定，看板从这一天开始统计）
 DATA_START  = "2025-12-22"
@@ -156,7 +160,8 @@ class MCPClient:
 def submit_query(mcp: MCPClient, yesterday: str) -> int:
     """
     提交 SQL 模板查询，返回 queryId。
-    查询约课日期范围：DATA_START ~ yesterday。
+    查询约课日期：>= DATA_START（不设上限，已预约的未来课程也纳入）。
+    截止取数日期（指标计算截止）由 SQL 模板内部使用 yesterday 控制。
     """
     result = mcp.tool_call("sqlTemplate_run", {
         "templateId": TEMPLATE_ID,
@@ -164,8 +169,8 @@ def submit_query(mcp: MCPClient, yesterday: str) -> int:
         "params": [{
             "name":      "study_date",
             "aliasName": "约课日期",
-            "operator":  "between",
-            "value":     f"{DATA_START},{yesterday}",
+            "operator":  ">=",
+            "value":     DATA_START,
             "decimal":   False,
             "required":  True,
         }],
@@ -180,18 +185,30 @@ def submit_query(mcp: MCPClient, yesterday: str) -> int:
 def wait_query_done(mcp: MCPClient, query_id: int, max_wait: int = 1800) -> None:
     """
     轮询查询状态，直到完成或超时。
-    使用 adhoc_getQueryResult 的 timeoutSeconds 参数实现服务端阻塞等待。
+    每轮最多等 90 秒（低于 HTTP 超时 180s），循环重试直到 max_wait。
     """
     log.info(f"Waiting for query {query_id} (max {max_wait}s)...")
-    result = mcp.tool_call("adhoc_getQueryResult", {
-        "queryId":        query_id,
-        "timeoutSeconds": min(max_wait, 1800),
-    })
-    data = result.get("data", {})
-    status = data.get("status", "")
-    if status not in ("SUCCESS", "FINISHED", "DONE"):
-        raise RuntimeError(f"Query {query_id} failed. Status={status}, result={result}")
-    log.info(f"Query {query_id} completed. Status={status}")
+    poll_timeout = 90
+    deadline = time.time() + max_wait
+    while True:
+        result = mcp.tool_call("adhoc_getQueryResult", {
+            "queryId":        query_id,
+            "timeoutSeconds": poll_timeout,
+        })
+        data = result.get("data", {})
+        if isinstance(data, dict):
+            status = data.get("status", "")
+        else:
+            status = str(data)
+        if status in ("SUCCESS", "FINISHED", "DONE", "成功"):
+            log.info(f"Query {query_id} completed. Status={status}")
+            return
+        failed_keywords = ("FAILED", "ERROR", "失败", "CANCELLED")
+        if any(k in status.upper() for k in failed_keywords):
+            raise RuntimeError(f"Query {query_id} failed. Status={status}, result={result}")
+        if time.time() >= deadline:
+            raise RuntimeError(f"Query {query_id} timed out after {max_wait}s. Last status={status}")
+        log.info(f"Query {query_id} still running (status={status}), polling again...")
 
 
 def get_csv_url(mcp: MCPClient, query_id: int) -> str:
@@ -199,7 +216,14 @@ def get_csv_url(mcp: MCPClient, query_id: int) -> str:
     result = mcp.tool_call("adhoc_getQueryDownloadUrl", {"queryId": query_id})
     if result.get("status") != "SUCCESS":
         raise RuntimeError(f"adhoc_getQueryDownloadUrl failed: {result}")
-    url = result["data"]["url"]
+    log.info(f"adhoc_getQueryDownloadUrl result structure: {type(result['data'])} = {str(result['data'])[:500]}")
+    data = result["data"]
+    if isinstance(data, str):
+        url = data
+    elif isinstance(data, dict):
+        url = data.get("url") or data.get("downloadUrl") or data.get("csvUrl") or next(iter(data.values()))
+    else:
+        raise RuntimeError(f"Unexpected data type in adhoc_getQueryDownloadUrl: {type(data)}")
     log.info(f"Download URL obtained")
     return url
 
@@ -209,6 +233,8 @@ def download_rows(url: str) -> list:
     下载 CSV 文件，返回行列表（list of dict）。
     CSV 文件为 UTF-8-BOM 编码。
     """
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = "https://" + url
     resp = requests.get(url, timeout=300)
     resp.raise_for_status()
     content = resp.content.decode("utf-8-sig")
