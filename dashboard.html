@@ -41,6 +41,27 @@
       background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
       padding: 5px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap;
     }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    #refresh-btn {
+      display: none;
+      align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.45);
+      color: white; font-size: 13px; font-weight: 600;
+      padding: 6px 16px; border-radius: 20px; cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      white-space: nowrap;
+    }
+    #refresh-btn:hover:not(:disabled) { background: rgba(255,255,255,0.3); }
+    #refresh-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    #refresh-btn .spin { display: inline-block; }
+    #refresh-btn.loading .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #refresh-toast {
+      display: none; position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #1a237e; color: white; padding: 12px 24px; border-radius: 12px;
+      font-size: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); z-index: 9999;
+      max-width: 420px; text-align: center;
+    }
 
     /* ===== LAYOUT ===== */
     .container { max-width: 1440px; margin: 0 auto; padding: 24px 20px 40px; }
@@ -230,8 +251,14 @@
       <div class="header-sub">数据范围：约课日期 2025-12-22 起 &nbsp;|&nbsp; 数据来源：Mario 模板 #24773 &nbsp;|&nbsp; 7日内数据 = 截止D6</div>
     </div>
   </div>
-  <div class="header-badge">最后更新：2026-03-18</div>
+  <div class="header-right">
+    <div class="header-badge" id="update-badge">最后更新：2026-03-18</div>
+    <button id="refresh-btn" onclick="triggerRefresh()" title="从 Mario 拉取最新数据并重新生成看板">
+      <span class="spin">↻</span> 刷新数据
+    </button>
+  </div>
 </div>
+<div id="refresh-toast"></div>
 
 <div class="container">
 
@@ -777,6 +804,79 @@ document.getElementById('m3-recent').onclick = () => { selM3.clear(); getDefault
 renderKPIs();
 renderM2();
 renderM3();
+
+// ─────────────────────── 手动刷新按钮 ───────────────────────
+
+const LOCAL_API = "http://localhost:8765";
+const btn       = document.getElementById("refresh-btn");
+const toast     = document.getElementById("refresh-toast");
+let   pollTimer = null;
+
+function isLocalServer() {
+  return window.location.hostname === "localhost" ||
+         window.location.hostname === "127.0.0.1";
+}
+
+function showToast(msg, durationMs) {
+  toast.textContent = msg;
+  toast.style.display = "block";
+  if (durationMs) setTimeout(() => { toast.style.display = "none"; }, durationMs);
+}
+
+function setBtnLoading(loading) {
+  btn.disabled = loading;
+  btn.classList.toggle("loading", loading);
+  btn.innerHTML = loading
+    ? '<span class="spin">↻</span> 更新中...'
+    : '<span class="spin">↻</span> 刷新数据';
+}
+
+function pollStatus() {
+  fetch(LOCAL_API + "/api/status")
+    .then(r => r.json())
+    .then(data => {
+      if (data.running) {
+        pollTimer = setTimeout(pollStatus, 5000);
+        return;
+      }
+      clearTimeout(pollTimer);
+      setBtnLoading(false);
+      if (data.last_result === "success") {
+        showToast("✅ 数据已更新完成，页面即将刷新...", 3000);
+        setTimeout(() => location.reload(), 3000);
+      } else {
+        showToast("❌ 更新失败：" + (data.last_result || "未知错误"), 6000);
+      }
+    })
+    .catch(() => {
+      clearTimeout(pollTimer);
+      setBtnLoading(false);
+      showToast("⚠️ 无法连接本地服务器，请确认 server.py 正在运行", 5000);
+    });
+}
+
+async function triggerRefresh() {
+  setBtnLoading(true);
+  showToast("🚀 正在向 Mario 提交查询，约需 2-4 分钟，请勿关闭页面...");
+  try {
+    const resp = await fetch(LOCAL_API + "/api/refresh", { method: "POST" });
+    const data = await resp.json();
+    if (data.started) {
+      pollTimer = setTimeout(pollStatus, 8000);
+    } else {
+      setBtnLoading(false);
+      showToast("⏳ " + data.message, 4000);
+    }
+  } catch {
+    setBtnLoading(false);
+    showToast("⚠️ 无法连接本地服务器，请确认 server.py 正在运行", 5000);
+  }
+}
+
+// 仅在本地服务器模式下显示刷新按钮
+if (isLocalServer()) {
+  btn.style.display = "inline-flex";
+}
 
 </script>
 </body>
