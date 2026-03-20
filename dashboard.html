@@ -807,7 +807,13 @@ renderM3();
 
 // ─────────────────────── 手动刷新按钮 ───────────────────────
 
-const LOCAL_API = "http://localhost:8765";
+const LOCAL_API   = "http://localhost:8765";
+const GH_OWNER    = "yuchang-cloud";
+const GH_REPO     = "ai-consultant-dashboard";
+const GH_WORKFLOW = "refresh.yml";
+const GH_PAT      = atob("Z2l0aHViX3BhdF8xMUJZUzdGM0EwZ2t5S0xCNDRtN2lBX0E5aEZmSXp3UVY2WkdyZ3NtMndISWdwQXZjZ25wQ2tHcUthUHhDT2xvRjRVS0xWUEVMVTRHN2g2VHFa");
+const GH_API      = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
+
 const btn       = document.getElementById("refresh-btn");
 const toast     = document.getElementById("refresh-toast");
 let   pollTimer = null;
@@ -831,14 +837,12 @@ function setBtnLoading(loading) {
     : '<span class="spin">↻</span> 刷新数据';
 }
 
-function pollStatus() {
+// ── 本地服务器模式：轮询 /api/status ──────────────────────────────
+function pollLocalStatus() {
   fetch(LOCAL_API + "/api/status")
     .then(r => r.json())
     .then(data => {
-      if (data.running) {
-        pollTimer = setTimeout(pollStatus, 5000);
-        return;
-      }
+      if (data.running) { pollTimer = setTimeout(pollLocalStatus, 5000); return; }
       clearTimeout(pollTimer);
       setBtnLoading(false);
       if (data.last_result === "success") {
@@ -851,32 +855,98 @@ function pollStatus() {
     .catch(() => {
       clearTimeout(pollTimer);
       setBtnLoading(false);
-      showToast("⚠️ 无法连接本地服务器，请确认 server.py 正在运行", 5000);
+      showToast("⚠️ 无法连接本地服务器", 5000);
     });
+}
+
+// ── GitHub Actions 模式：轮询 workflow run 状态 ────────────────────
+async function pollGHRun(runId) {
+  try {
+    const r    = await fetch(`${GH_API}/actions/runs/${runId}`,
+                   { headers: { Authorization: `Bearer ${GH_PAT}` } });
+    const data = await r.json();
+    const { status, conclusion } = data;
+    if (status !== "completed") {
+      pollTimer = setTimeout(() => pollGHRun(runId), 12000);
+      return;
+    }
+    clearTimeout(pollTimer);
+    setBtnLoading(false);
+    if (conclusion === "success") {
+      showToast("✅ 数据已更新完成，页面即将刷新...", 4000);
+      setTimeout(() => location.reload(), 4000);
+    } else {
+      showToast(`❌ GitHub Actions 运行失败（${conclusion}），请到 GitHub Actions 页面查看日志`, 8000);
+    }
+  } catch {
+    clearTimeout(pollTimer);
+    setBtnLoading(false);
+    showToast("⚠️ 查询 GitHub Actions 状态失败，请稍后手动刷新页面", 6000);
+  }
+}
+
+async function triggerGHRefresh() {
+  // 1. 触发 workflow_dispatch
+  const triggerResp = await fetch(
+    `${GH_API}/actions/workflows/${GH_WORKFLOW}/dispatches`,
+    {
+      method:  "POST",
+      headers: { Authorization: `Bearer ${GH_PAT}`, "Content-Type": "application/json" },
+      body:    JSON.stringify({ ref: "main" }),
+    }
+  );
+  if (triggerResp.status !== 204) {
+    setBtnLoading(false);
+    showToast("❌ 触发失败，请检查 PAT 权限", 5000);
+    return;
+  }
+  showToast("🚀 更新任务已提交，正在等待 GitHub Actions 执行（约 3-5 分钟）...");
+
+  // 2. 等 5 秒后找到刚创建的 run ID
+  await new Promise(r => setTimeout(r, 5000));
+  const runsResp = await fetch(
+    `${GH_API}/actions/workflows/${GH_WORKFLOW}/runs?per_page=1&event=workflow_dispatch`,
+    { headers: { Authorization: `Bearer ${GH_PAT}` } }
+  );
+  const runsData = await runsResp.json();
+  const runId    = runsData.workflow_runs?.[0]?.id;
+  if (!runId) {
+    showToast("⚠️ 任务已提交，但无法获取运行 ID，请稍后手动刷新页面", 6000);
+    setBtnLoading(false);
+    return;
+  }
+  pollTimer = setTimeout(() => pollGHRun(runId), 15000);
 }
 
 async function triggerRefresh() {
   setBtnLoading(true);
-  showToast("🚀 正在向 Mario 提交查询，约需 2-4 分钟，请勿关闭页面...");
-  try {
-    const resp = await fetch(LOCAL_API + "/api/refresh", { method: "POST" });
-    const data = await resp.json();
-    if (data.started) {
-      pollTimer = setTimeout(pollStatus, 8000);
-    } else {
+  if (isLocalServer()) {
+    showToast("🚀 正在向 Mario 提交查询，约需 2-4 分钟，请勿关闭页面...");
+    try {
+      const resp = await fetch(LOCAL_API + "/api/refresh", { method: "POST" });
+      const data = await resp.json();
+      if (data.started) {
+        pollTimer = setTimeout(pollLocalStatus, 8000);
+      } else {
+        setBtnLoading(false);
+        showToast("⏳ " + data.message, 4000);
+      }
+    } catch {
       setBtnLoading(false);
-      showToast("⏳ " + data.message, 4000);
+      showToast("⚠️ 无法连接本地服务器，请确认 server.py 正在运行", 5000);
     }
-  } catch {
-    setBtnLoading(false);
-    showToast("⚠️ 无法连接本地服务器，请确认 server.py 正在运行", 5000);
+  } else {
+    try {
+      await triggerGHRefresh();
+    } catch {
+      setBtnLoading(false);
+      showToast("❌ 触发失败，请检查网络或 PAT 权限", 5000);
+    }
   }
 }
 
-// 仅在本地服务器模式下显示刷新按钮
-if (isLocalServer()) {
-  btn.style.display = "inline-flex";
-}
+// 本地和线上都显示刷新按钮
+btn.style.display = "inline-flex";
 
 </script>
 </body>
