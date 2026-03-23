@@ -16,8 +16,7 @@ import threading
 import time
 from pathlib import Path
 
-from flask import Flask, jsonify, send_file
-from flask_cors import CORS  # type: ignore
+from flask import Flask, jsonify, request, send_file
 
 BASE_DIR   = Path(__file__).parent
 SCRIPT     = BASE_DIR / "update_dashboard.py"
@@ -25,8 +24,14 @@ DASHBOARD  = BASE_DIR / "dashboard.html"
 PYTHON     = BASE_DIR / ".venv/bin/python3"
 PORT       = 8765
 
+ALLOWED_ORIGINS = {
+    "https://yuchang-cloud.github.io",
+    "http://localhost:8765",
+    "http://127.0.0.1:8765",
+    "null",  # 本地直接打开 HTML 文件时
+}
+
 app = Flask(__name__)
-CORS(app)  # 允许 GitHub Pages 的页面调用本地 API
 
 _lock = threading.Lock()
 _state: dict = {
@@ -59,32 +64,51 @@ def _run_update() -> None:
         _state["last_result"] = result
 
 
-@app.route("/")
-def index():
-    return send_file(DASHBOARD)
+def _cors_headers(response):
+    """添加 CORS 和 Private Network Access 头，让 GitHub Pages (HTTPS) 可以调用 localhost。"""
+    origin = request.headers.get("Origin", "")
+    if origin in ALLOWED_ORIGINS or not origin:
+        response.headers["Access-Control-Allow-Origin"]          = origin or "*"
+        response.headers["Access-Control-Allow-Methods"]         = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"]         = "Content-Type"
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
 
 
-@app.route("/api/refresh", methods=["POST"])
+@app.after_request
+def after_request(response):
+    return _cors_headers(response)
+
+
+@app.route("/api/refresh", methods=["OPTIONS", "POST"])
 def api_refresh():
+    if request.method == "OPTIONS":
+        return _cors_headers(app.make_default_options_response())
     with _lock:
         already_running = _state["running"]
-
     if already_running:
         return jsonify({"started": False, "message": "数据更新已在进行中，请稍候..."})
-
     thread = threading.Thread(target=_run_update, daemon=True)
     thread.start()
     return jsonify({"started": True, "message": "数据更新已启动，约需 2-3 分钟..."})
 
 
-@app.route("/api/status")
+@app.route("/api/status", methods=["GET", "OPTIONS"])
 def api_status():
+    if request.method == "OPTIONS":
+        return _cors_headers(app.make_default_options_response())
     with _lock:
         snap = dict(_state)
     return jsonify(snap)
 
 
+@app.route("/")
+def index():
+    return send_file(DASHBOARD)
+
+
 if __name__ == "__main__":
     print(f"✅ 看板服务已启动：http://localhost:{PORT}")
+    print(f"   GitHub Pages 上的刷新按钮也会连接此服务")
     print(f"   按 Ctrl+C 停止")
     app.run(host="127.0.0.1", port=PORT, debug=False)
