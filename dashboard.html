@@ -806,17 +806,15 @@ renderM2();
 renderM3();
 
 // ─────────────────────── 手动刷新按钮 ───────────────────────
-// 所有刷新请求均走本地服务器（内网数据源只有本机能访问）
 
 const LOCAL_API = "http://localhost:8765";
-
 const btn       = document.getElementById("refresh-btn");
 const toast     = document.getElementById("refresh-toast");
 let   pollTimer = null;
 
-function isLocalServer() {
-  return window.location.hostname === "localhost" ||
-         window.location.hostname === "127.0.0.1";
+function isLocal() {
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1";
 }
 
 function showToast(msg, durationMs) {
@@ -855,8 +853,15 @@ function pollStatus() {
 }
 
 async function triggerRefresh() {
+  if (!isLocal()) {
+    // 线上网站：浏览器安全策略禁止 HTTPS 调用 http://localhost
+    // 直接跳转到本地服务页面操作
+    window.open(LOCAL_API, "_blank");
+    return;
+  }
+  // 本地服务器：正常走刷新流程
   setBtnLoading(true);
-  showToast("🚀 正在连接本地服务，提交数据查询（约 2-4 分钟）...");
+  showToast("🚀 正在向 Mario 提交查询，约需 2-4 分钟，请勿关闭页面...");
   try {
     const resp = await fetch(LOCAL_API + "/api/refresh", { method: "POST" });
     const data = await resp.json();
@@ -868,12 +873,16 @@ async function triggerRefresh() {
     }
   } catch {
     setBtnLoading(false);
-    showToast("⚠️ 无法连接本地服务，请确认你的 Mac 正在运行看板服务（server.py）", 7000);
+    showToast("⚠️ 无法连接本地服务，请确认你的 Mac 正在运行看板服务", 6000);
   }
 }
 
-// 始终显示刷新按钮
+// 线上和本地都显示按钮，但行为不同
 btn.style.display = "inline-flex";
+if (!isLocal()) {
+  btn.title = "点击在新标签页打开本地刷新页面（需要 Mac 开机）";
+  btn.innerHTML = '<span class="spin">↻</span> 刷新数据';
+}
 
 </script>
 </body>

@@ -1,9 +1,7 @@
 name: Refresh Dashboard
 
 on:
-  workflow_dispatch:       # 允许手动触发（网页按钮调用 GitHub API）
-  schedule:
-    - cron: '0 4 * * *'   # 每天 UTC 04:00 = 北京时间 12:00，作为自动兜底
+  workflow_dispatch:       # 仅支持手动触发（注意：需在公司内网环境运行）
 
 jobs:
   refresh:
