@@ -886,7 +886,10 @@ async function pollGHRun(runId) {
 }
 
 async function triggerGHRefresh() {
-  // 1. 触发 workflow_dispatch
+  // 1. 记录触发时间，用于后续区分新旧 run
+  const triggeredAt = new Date();
+
+  // 2. 触发 workflow_dispatch
   const triggerResp = await fetch(
     `${GH_API}/actions/workflows/${GH_WORKFLOW}/dispatches`,
     {
@@ -900,18 +903,25 @@ async function triggerGHRefresh() {
     showToast("❌ 触发失败，请检查 PAT 权限", 5000);
     return;
   }
-  showToast("🚀 更新任务已提交，正在等待 GitHub Actions 执行（约 3-5 分钟）...");
+  showToast("🚀 更新任务已提交，正在等待 GitHub Actions 启动（约 3-5 分钟）...");
 
-  // 2. 等 5 秒后找到刚创建的 run ID
-  await new Promise(r => setTimeout(r, 5000));
-  const runsResp = await fetch(
-    `${GH_API}/actions/workflows/${GH_WORKFLOW}/runs?per_page=1&event=workflow_dispatch`,
-    { headers: { Authorization: `Bearer ${GH_PAT}` } }
-  );
-  const runsData = await runsResp.json();
-  const runId    = runsData.workflow_runs?.[0]?.id;
+  // 3. 轮询等待新 run 出现（最多等 60 秒），必须是触发时间之后创建的
+  let runId = null;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise(r => setTimeout(r, 8000));
+    const runsResp = await fetch(
+      `${GH_API}/actions/workflows/${GH_WORKFLOW}/runs?per_page=5&event=workflow_dispatch`,
+      { headers: { Authorization: `Bearer ${GH_PAT}` } }
+    );
+    const runsData = await runsResp.json();
+    const newRun = (runsData.workflow_runs || []).find(run => {
+      return new Date(run.created_at) >= triggeredAt;
+    });
+    if (newRun) { runId = newRun.id; break; }
+  }
+
   if (!runId) {
-    showToast("⚠️ 任务已提交，但无法获取运行 ID，请稍后手动刷新页面", 6000);
+    showToast("⚠️ 任务已提交，但未检测到新的 Actions 运行，请到 GitHub Actions 页面确认", 7000);
     setBtnLoading(false);
     return;
   }
