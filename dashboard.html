@@ -64,7 +64,127 @@
     }
 
     /* ===== LAYOUT ===== */
-    .container { max-width: 1440px; margin: 0 auto; padding: 24px 20px 40px; }
+    .container { max-width: 1800px; margin: 0 auto; padding: 0; display: flex; align-items: flex-start; gap: 0; }
+    .main-content { flex: 1; min-width: 0; padding: 24px 20px 40px; }
+
+    /* ===== REPORT PANEL ===== */
+    .report-panel {
+      width: 380px; flex-shrink: 0;
+      position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      padding: 20px 18px 48px 14px;
+      border-left: 2px solid #dde0f0;
+      background: #f4f5fb;
+    }
+    .report-panel::-webkit-scrollbar { width: 4px; }
+    .report-panel::-webkit-scrollbar-thumb { background: #c5cae9; border-radius: 2px; }
+
+    .report-panel-hd {
+      font-size: 15px; font-weight: 700; color: #1a237e;
+      letter-spacing: 0.5px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #c5cae9;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .report-entry {
+      background: white; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border: 1px solid #e0e3f0;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .report-entry:hover { box-shadow: 0 3px 14px rgba(26,35,126,0.1); }
+
+    .report-entry-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .report-entry-hd:hover { background: #f0f2fb; }
+
+    .report-entry-date {
+      font-size: 15px; font-weight: 700; color: #1a237e;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .report-entry-new {
+      font-size: 10px; font-weight: 700; color: white;
+      background: #e53935; padding: 2px 6px; border-radius: 4px;
+    }
+
+    .report-entry-arrow {
+      font-size: 12px; color: #9fa8da;
+      transition: transform 0.25s;
+      display: inline-block;
+    }
+    .report-entry.open .report-entry-arrow { transform: rotate(180deg); }
+
+    .report-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #eef0f8;
+    }
+    .report-entry.open .report-body { display: block; }
+
+    .report-divider {
+      border: none; border-top: 1.5px solid #eef0f8;
+      margin: 12px 0;
+    }
+
+    /* 周标题（一级维度） */
+    .report-week-hd {
+      font-size: 14px; font-weight: 700; color: #1a237e;
+      margin: 14px 0 6px;
+      padding-left: 9px;
+      border-left: 3px solid #5c6bc0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .report-week-hd:first-child { margin-top: 12px; }
+    .report-ended-tag {
+      font-size: 10px; font-weight: 600; color: #888;
+      background: #ebebeb; padding: 1px 5px; border-radius: 3px;
+    }
+
+    /* 内容文本 */
+    .report-text {
+      font-size: 13.5px; color: #444; line-height: 1.8;
+    }
+    .report-text > ul { padding-left: 18px; margin: 4px 0 8px; }
+    .report-text li { margin-bottom: 5px; }
+    .report-text p  { margin-bottom: 6px; }
+    .report-text strong { color: #1a237e; }
+    .report-text .hl-down { color: #c62828; font-weight: 600; }
+    .report-text .hl-up   { color: #2e7d32; font-weight: 600; }
+
+    /* 子列表（拆渠道 / 归因 等次级内容） */
+    .report-sub {
+      font-size: 13px; color: #555; line-height: 1.8;
+      background: #f8f9fc; border-radius: 8px;
+      padding: 8px 12px 8px 12px;
+      margin: 6px 0 8px;
+    }
+    .report-sub ul { padding-left: 16px; margin: 2px 0 4px; }
+    .report-sub li { margin-bottom: 4px; }
+    .report-sub .sub-label {
+      font-size: 12px; font-weight: 700; color: #555;
+      margin: 6px 0 2px;
+    }
+    .report-sub .sub-label:first-child { margin-top: 0; }
+
+    .todo-tag {
+      display: inline-block; background: #dbeafe; color: #1e40af;
+      font-size: 10.5px; font-weight: 700; padding: 1px 7px;
+      border-radius: 4px; margin: 0 3px; vertical-align: middle;
+    }
+    .note-tag {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      font-size: 10.5px; font-weight: 700; padding: 1px 7px;
+      border-radius: 4px; margin: 0 3px; vertical-align: middle;
+    }
+
+    @media (max-width: 1200px) { .report-panel { display: none; } }
 
     /* ===== SECTION ===== */
     .section { margin-bottom: 32px; }
@@ -349,7 +469,7 @@
     </div>
   </div>
   <div class="header-right">
-    <div class="header-badge" id="update-badge">最后更新：2026-03-22</div>
+    <div class="header-badge" id="update-badge">最后更新：2026-03-23</div>
     <button id="refresh-btn" onclick="triggerRefresh()" title="从 Mario 拉取最新数据并重新生成看板">
       <span class="spin">↻</span> 刷新数据
     </button>
@@ -358,6 +478,7 @@
 <div id="refresh-toast"></div>
 
 <div class="container">
+<div class="main-content">
 
   <!-- =============== MODULE 1 =============== -->
   <div class="section">
@@ -370,7 +491,7 @@
   </div>
 
   <!-- =============== MODULE 2 =============== -->
-  <div class="section">
+  <div class="section" id="section-m2">
     <div class="section-header">
       <span class="section-num">2</span>
       <span class="section-title">AI顾问 &amp; 真人顾问 数据对比</span>
@@ -393,15 +514,12 @@
               <th rowspan="2" style="min-width:70px">统计周期</th>
               <th rowspan="2" style="min-width:80px">顾问类型</th>
               <th rowspan="2">分配人数</th>
+              <th rowspan="2">转化人数</th>
+              <th rowspan="2" class="sep-lr">转化率</th>
               <th rowspan="2" class="sep-lr">加微率</th>
-              <th colspan="4" class="grp sep-l">7日内整体数据</th>
               <th colspan="4" class="grp sep-lr">7日内加微数据</th>
             </tr>
             <tr>
-              <th class="sep-l">到课率</th>
-              <th>完课率</th>
-              <th>转化率</th>
-              <th class="sep-r">完课转化率</th>
               <th class="sep-l">加微到课率</th>
               <th>加微完课率</th>
               <th>加微转化率</th>
@@ -425,7 +543,7 @@
   </div>
 
   <!-- =============== MODULE 3 =============== -->
-  <div class="section">
+  <div class="section" id="section-m3">
     <div class="section-header">
       <span class="section-num">3</span>
       <span class="section-title">分渠道 数据对比</span>
@@ -456,7 +574,73 @@
     </div>
   </div>
 
-</div>
+</div><!-- /.main-content -->
+
+<!-- =============== REPORT PANEL =============== -->
+<div class="report-panel" id="report-panel">
+  <div class="report-panel-hd">📋 周报</div>
+
+  <!-- ── 03-24 ── -->
+  <div class="report-entry open" id="report-0324">
+    <div class="report-entry-hd" onclick="toggleReport('report-0324')">
+      <span class="report-entry-date">
+        📅 03-24
+        <span class="report-entry-new">NEW</span>
+      </span>
+      <span class="report-entry-arrow">▾</span>
+    </div>
+    <div class="report-body">
+
+      <!-- 03-09周 -->
+      <div class="report-week-hd">
+        03-09周
+        <span class="report-ended-tag">已结束</span>
+      </div>
+      <div class="report-text">
+        <ul>
+          <li>整体转化率比真人 <span class="hl-down">-1.5pp</span>，加微转化率 <span class="hl-down">-1.7pp</span></li>
+          <li>AI顾问分配人数较少（<strong>65人</strong>），在 03-16周 之后 AI顾问开始增量</li>
+        </ul>
+      </div>
+
+      <hr class="report-divider">
+
+      <!-- 03-16周 -->
+      <div class="report-week-hd">03-16周</div>
+      <div class="report-text">
+        <ul>
+          <li>AI顾问分配人数 <strong>319人</strong></li>
+          <li>加微转化率与原来认知一致，<span class="hl-down">-1.7pp</span></li>
+          <li>
+            拆渠道看：
+            <div class="report-sub">
+              <ul>
+                <li>投放渠道并未出现、因 AI 不强营销风格导致加微转化率更差的情况；但用户量较少，仍需更多样本<span class="note-tag">待验证</span></li>
+              </ul>
+              <div class="sub-label">加微率是显著短板：</div>
+              <ul>
+                <li>上周五上线"智能外呼+短信"，但对加微率提升<strong>效果不显著</strong></li>
+                <li>
+                  加微率低的归因：
+                  <ul>
+                    <li>内容：真人打电话会先做学情沟通，让家长对服务更有认知、更有动力加微信</li>
+                    <li>频率低：真人打电话的沟通频次也更高</li>
+                  </ul>
+                </li>
+                <li>后续 Todo：<span class="todo-tag">TODO</span> 尽快上线 AI 打电话，还在技术调研中</li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+  <!-- ── 后续每周在此添加新 report-entry ── -->
+
+</div><!-- /.report-panel -->
+
+</div><!-- /.container -->
 
 <!-- ===== ATTRIBUTION MODAL ===== -->
 <div class="attr-overlay" id="attr-overlay">
@@ -492,7 +676,7 @@
         </div>
       </div>
       <!-- Decomposition cards -->
-      <div class="attr-decomp" id="attr-decomp"></div>
+      <div class="attr-decomp" id="attr-decomp" style="display:none"></div>
       <!-- Insight narrative -->
       <div id="attr-insight-container"></div>
     </div>
@@ -505,7 +689,7 @@ const ALL_WEEKS = ['汇总', ...WEEKS];
 
 // ── 真实数据：每格只存原始人数 n/jw/dk/wk/xf/jw_dk/jw_wk/jw_xf/jw_wk_xf ──
 // 所有"率"在 JS 端用 分子÷分母 实时计算，不存预计算的比率
-const MAIN_DATA = {"03-23周":{"AI顾问":{"n":154,"jw":40,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":123,"jw":58,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":319,"jw":159,"dk":156,"wk":105,"xf":11,"jw_dk":117,"jw_wk":91,"jw_xf":10,"jw_wk_xf":10},"真人顾问":{"n":640,"jw":467,"dk":405,"wk":289,"xf":37,"jw_dk":350,"jw_wk":263,"jw_xf":35,"jw_wk_xf":35}},"03-09周":{"AI顾问":{"n":65,"jw":49,"dk":57,"wk":38,"xf":6,"jw_dk":46,"jw_wk":34,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":566,"jw":415,"dk":359,"wk":242,"xf":61,"jw_dk":318,"jw_wk":225,"jw_xf":58,"jw_wk_xf":57}},"03-02周":{"AI顾问":{"n":100,"jw":53,"dk":63,"wk":40,"xf":9,"jw_dk":45,"jw_wk":26,"jw_xf":7,"jw_wk_xf":7},"真人顾问":{"n":516,"jw":390,"dk":349,"wk":214,"xf":51,"jw_dk":296,"jw_wk":194,"jw_xf":51,"jw_wk_xf":51}},"02-23周":{"AI顾问":{"n":56,"jw":41,"dk":44,"wk":33,"xf":6,"jw_dk":38,"jw_wk":29,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":472,"jw":356,"dk":307,"wk":233,"xf":57,"jw_dk":269,"jw_wk":216,"jw_xf":55,"jw_wk_xf":55}},"02-16周":{"AI顾问":{"n":151,"jw":82,"dk":121,"wk":78,"xf":14,"jw_dk":73,"jw_wk":50,"jw_xf":12,"jw_wk_xf":12},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":157,"jw":90,"dk":127,"wk":80,"xf":6,"jw_dk":76,"jw_wk":55,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":125,"jw":88,"dk":106,"wk":78,"xf":11,"jw_dk":81,"jw_wk":66,"jw_xf":9,"jw_wk_xf":9}},"02-02周":{"AI顾问":{"n":93,"jw":64,"dk":82,"wk":58,"xf":5,"jw_dk":57,"jw_wk":45,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":512,"jw":391,"dk":466,"wk":327,"xf":48,"jw_dk":366,"jw_wk":277,"jw_xf":46,"jw_wk_xf":46}},"01-26周":{"AI顾问":{"n":22,"jw":14,"dk":20,"wk":14,"xf":3,"jw_dk":13,"jw_wk":11,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":496,"jw":391,"dk":443,"wk":313,"xf":58,"jw_dk":365,"jw_wk":274,"jw_xf":55,"jw_wk_xf":55}},"01-19周":{"AI顾问":{"n":31,"jw":22,"dk":28,"wk":15,"xf":4,"jw_dk":21,"jw_wk":14,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":596,"jw":425,"dk":527,"wk":370,"xf":45,"jw_dk":386,"jw_wk":295,"jw_xf":40,"jw_wk_xf":40}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":485,"jw":304,"dk":398,"wk":223,"xf":45,"jw_dk":275,"jw_wk":197,"jw_xf":45,"jw_wk_xf":45}},"01-05周":{"AI顾问":{"n":9,"jw":7,"dk":8,"wk":4,"xf":2,"jw_dk":6,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":572,"jw":379,"dk":475,"wk":319,"xf":59,"jw_dk":345,"jw_wk":278,"jw_xf":58,"jw_wk_xf":58}},"12-29周":{"AI顾问":{"n":13,"jw":8,"dk":9,"wk":6,"xf":2,"jw_dk":7,"jw_wk":6,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":390,"jw":215,"dk":317,"wk":188,"xf":29,"jw_dk":196,"jw_wk":152,"jw_xf":28,"jw_wk_xf":28}},"12-22周":{"AI顾问":{"n":20,"jw":9,"dk":16,"wk":9,"xf":1,"jw_dk":8,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":404,"jw":220,"dk":311,"wk":152,"xf":36,"jw_dk":196,"jw_wk":134,"jw_xf":34,"jw_wk_xf":34}}};
+const MAIN_DATA = {"03-23周":{"AI顾问":{"n":197,"jw":68,"dk":11,"wk":7,"xf":0,"jw_dk":9,"jw_wk":7,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":243,"jw":125,"dk":30,"wk":17,"xf":0,"jw_dk":23,"jw_wk":16,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":319,"jw":167,"dk":168,"wk":112,"xf":13,"jw_dk":127,"jw_wk":99,"jw_xf":12,"jw_wk_xf":12},"真人顾问":{"n":640,"jw":469,"dk":418,"wk":299,"xf":50,"jw_dk":361,"jw_wk":272,"jw_xf":48,"jw_wk_xf":48}},"03-09周":{"AI顾问":{"n":65,"jw":49,"dk":57,"wk":38,"xf":6,"jw_dk":46,"jw_wk":34,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":566,"jw":415,"dk":359,"wk":242,"xf":61,"jw_dk":318,"jw_wk":225,"jw_xf":58,"jw_wk_xf":57}},"03-02周":{"AI顾问":{"n":100,"jw":53,"dk":63,"wk":40,"xf":9,"jw_dk":45,"jw_wk":26,"jw_xf":7,"jw_wk_xf":7},"真人顾问":{"n":516,"jw":390,"dk":349,"wk":214,"xf":51,"jw_dk":296,"jw_wk":194,"jw_xf":51,"jw_wk_xf":51}},"02-23周":{"AI顾问":{"n":56,"jw":41,"dk":44,"wk":33,"xf":6,"jw_dk":38,"jw_wk":29,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":472,"jw":356,"dk":307,"wk":233,"xf":57,"jw_dk":269,"jw_wk":216,"jw_xf":55,"jw_wk_xf":55}},"02-16周":{"AI顾问":{"n":151,"jw":82,"dk":121,"wk":78,"xf":14,"jw_dk":73,"jw_wk":50,"jw_xf":12,"jw_wk_xf":12},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":157,"jw":90,"dk":127,"wk":80,"xf":6,"jw_dk":76,"jw_wk":55,"jw_xf":6,"jw_wk_xf":6},"真人顾问":{"n":125,"jw":88,"dk":106,"wk":78,"xf":11,"jw_dk":81,"jw_wk":66,"jw_xf":9,"jw_wk_xf":9}},"02-02周":{"AI顾问":{"n":93,"jw":64,"dk":82,"wk":58,"xf":5,"jw_dk":57,"jw_wk":45,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":512,"jw":391,"dk":466,"wk":327,"xf":48,"jw_dk":366,"jw_wk":277,"jw_xf":46,"jw_wk_xf":46}},"01-26周":{"AI顾问":{"n":22,"jw":14,"dk":20,"wk":14,"xf":3,"jw_dk":13,"jw_wk":11,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":496,"jw":391,"dk":443,"wk":313,"xf":58,"jw_dk":365,"jw_wk":274,"jw_xf":55,"jw_wk_xf":55}},"01-19周":{"AI顾问":{"n":31,"jw":22,"dk":28,"wk":15,"xf":4,"jw_dk":21,"jw_wk":14,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":596,"jw":425,"dk":527,"wk":370,"xf":45,"jw_dk":386,"jw_wk":295,"jw_xf":40,"jw_wk_xf":40}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":485,"jw":304,"dk":398,"wk":223,"xf":45,"jw_dk":275,"jw_wk":197,"jw_xf":45,"jw_wk_xf":45}},"01-05周":{"AI顾问":{"n":9,"jw":7,"dk":8,"wk":4,"xf":2,"jw_dk":6,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":572,"jw":379,"dk":475,"wk":319,"xf":59,"jw_dk":345,"jw_wk":278,"jw_xf":58,"jw_wk_xf":58}},"12-29周":{"AI顾问":{"n":13,"jw":8,"dk":9,"wk":6,"xf":2,"jw_dk":7,"jw_wk":6,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":390,"jw":215,"dk":317,"wk":188,"xf":29,"jw_dk":196,"jw_wk":152,"jw_xf":28,"jw_wk_xf":28}},"12-22周":{"AI顾问":{"n":20,"jw":9,"dk":16,"wk":9,"xf":1,"jw_dk":8,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":404,"jw":220,"dk":311,"wk":152,"xf":36,"jw_dk":196,"jw_wk":134,"jw_xf":34,"jw_wk_xf":34}}};
 
 const CHANNELS = [
   { id: 'zebra-paid',    name: '斑马AI学App-付费购买' },
@@ -517,7 +701,7 @@ const CHANNELS = [
   { id: 'weibo',         name: '投放渠道-微博' },
 ];
 
-const CHANNEL_DATA = {"zebra-paid":{"03-23周":{"AI顾问":{"n":3,"jw":3,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":3,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":34,"jw":27,"dk":30,"wk":21,"xf":4,"jw_dk":24,"jw_wk":18,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":78,"jw":72,"dk":67,"wk":55,"xf":19,"jw_dk":63,"jw_wk":52,"jw_xf":18,"jw_wk_xf":18}},"03-09周":{"AI顾问":{"n":43,"jw":35,"dk":39,"wk":25,"xf":4,"jw_dk":34,"jw_wk":25,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":191,"jw":161,"dk":173,"wk":115,"xf":25,"jw_dk":148,"jw_wk":103,"jw_xf":23,"jw_wk_xf":23}},"03-02周":{"AI顾问":{"n":56,"jw":37,"dk":44,"wk":28,"xf":6,"jw_dk":32,"jw_wk":18,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":220,"jw":178,"dk":187,"wk":105,"xf":25,"jw_dk":157,"jw_wk":96,"jw_xf":25,"jw_wk_xf":25}},"02-23周":{"AI顾问":{"n":27,"jw":20,"dk":22,"wk":17,"xf":3,"jw_dk":19,"jw_wk":15,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":82,"jw":70,"dk":77,"wk":60,"xf":20,"jw_dk":67,"jw_wk":54,"jw_xf":19,"jw_wk_xf":19}},"02-16周":{"AI顾问":{"n":76,"jw":45,"dk":59,"wk":41,"xf":8,"jw_dk":40,"jw_wk":29,"jw_xf":7,"jw_wk_xf":7},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":90,"jw":55,"dk":69,"wk":40,"xf":3,"jw_dk":44,"jw_wk":29,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":52,"jw":39,"dk":46,"wk":30,"xf":7,"jw_dk":36,"jw_wk":25,"jw_xf":5,"jw_wk_xf":5}},"02-02周":{"AI顾问":{"n":46,"jw":36,"dk":38,"wk":29,"xf":2,"jw_dk":31,"jw_wk":27,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":270,"jw":217,"dk":247,"wk":168,"xf":31,"jw_dk":205,"jw_wk":151,"jw_xf":30,"jw_wk_xf":30}},"01-26周":{"AI顾问":{"n":11,"jw":7,"dk":10,"wk":6,"xf":1,"jw_dk":7,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":251,"jw":207,"dk":220,"wk":152,"xf":34,"jw_dk":190,"jw_wk":137,"jw_xf":32,"jw_wk_xf":32}},"01-19周":{"AI顾问":{"n":10,"jw":10,"dk":10,"wk":8,"xf":4,"jw_dk":10,"jw_wk":8,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":192,"jw":162,"dk":175,"wk":109,"xf":21,"jw_dk":146,"jw_wk":97,"jw_xf":17,"jw_wk_xf":17}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":154,"jw":137,"dk":141,"wk":132,"xf":24,"jw_dk":127,"jw_wk":120,"jw_xf":24,"jw_wk_xf":24}},"01-05周":{"AI顾问":{"n":5,"jw":5,"dk":5,"wk":4,"xf":2,"jw_dk":5,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":296,"jw":262,"dk":273,"wk":251,"xf":47,"jw_dk":244,"jw_wk":229,"jw_xf":47,"jw_wk_xf":47}},"12-29周":{"AI顾问":{"n":4,"jw":3,"dk":3,"wk":3,"xf":1,"jw_dk":3,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":153,"jw":120,"dk":145,"wk":133,"xf":21,"jw_dk":115,"jw_wk":106,"jw_xf":20,"jw_wk_xf":20}},"12-22周":{"AI顾问":{"n":7,"jw":6,"dk":5,"wk":5,"xf":1,"jw_dk":5,"jw_wk":5,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":110,"jw":97,"dk":108,"wk":100,"xf":28,"jw_dk":95,"jw_wk":90,"jw_xf":26,"jw_wk_xf":26}}},"zebra-divert":{"03-23周":{"AI顾问":{"n":5,"jw":4,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":1,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":18,"jw":10,"dk":13,"wk":9,"xf":0,"jw_dk":8,"jw_wk":8,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":18,"jw":17,"dk":11,"wk":9,"xf":0,"jw_dk":11,"jw_wk":9,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":11,"jw":9,"dk":9,"wk":8,"xf":2,"jw_dk":8,"jw_wk":8,"jw_xf":2,"jw_wk_xf":2}},"02-16周":{"AI顾问":{"n":10,"jw":6,"dk":8,"wk":6,"xf":1,"jw_dk":5,"jw_wk":4,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":12,"jw":7,"dk":11,"wk":10,"xf":0,"jw_dk":7,"jw_wk":7,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":18,"jw":15,"dk":16,"wk":13,"xf":1,"jw_dk":14,"jw_wk":13,"jw_xf":1,"jw_wk_xf":1}},"02-02周":{"AI顾问":{"n":14,"jw":9,"dk":14,"wk":12,"xf":2,"jw_dk":9,"jw_wk":7,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":56,"jw":44,"dk":50,"wk":42,"xf":5,"jw_dk":40,"jw_wk":35,"jw_xf":5,"jw_wk_xf":5}},"01-26周":{"AI顾问":{"n":4,"jw":3,"dk":4,"wk":3,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":33,"jw":27,"dk":30,"wk":28,"xf":1,"jw_dk":26,"jw_wk":26,"jw_xf":1,"jw_wk_xf":1}},"01-19周":{"AI顾问":{"n":2,"jw":1,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":46,"jw":29,"dk":43,"wk":40,"xf":0,"jw_dk":28,"jw_wk":25,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"zebra-mall":{"03-23周":{"AI顾问":{"n":21,"jw":8,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":15,"jw":8,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":88,"jw":58,"dk":65,"wk":44,"xf":1,"jw_dk":48,"jw_wk":35,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":194,"jw":142,"dk":160,"wk":119,"xf":4,"jw_dk":126,"jw_wk":99,"jw_xf":4,"jw_wk_xf":4}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":12,"jw":8,"dk":9,"wk":7,"xf":2,"jw_dk":7,"jw_wk":6,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":34,"jw":24,"dk":29,"wk":21,"xf":3,"jw_dk":20,"jw_wk":17,"jw_xf":3,"jw_wk_xf":3}},"02-16周":{"AI顾问":{"n":34,"jw":17,"dk":27,"wk":16,"xf":2,"jw_dk":16,"jw_wk":10,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":32,"jw":17,"dk":28,"wk":21,"xf":0,"jw_dk":15,"jw_wk":13,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":33,"jw":24,"dk":32,"wk":27,"xf":1,"jw_dk":23,"jw_wk":22,"jw_xf":1,"jw_wk_xf":1}},"02-02周":{"AI顾问":{"n":23,"jw":13,"dk":20,"wk":11,"xf":1,"jw_dk":11,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":139,"jw":96,"dk":127,"wk":94,"xf":9,"jw_dk":90,"jw_wk":73,"jw_xf":8,"jw_wk_xf":8}},"01-26周":{"AI顾问":{"n":5,"jw":3,"dk":4,"wk":3,"xf":0,"jw_dk":2,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":159,"jw":118,"dk":145,"wk":106,"xf":14,"jw_dk":114,"jw_wk":90,"jw_xf":14,"jw_wk_xf":14}},"01-19周":{"AI顾问":{"n":16,"jw":10,"dk":14,"wk":6,"xf":0,"jw_dk":9,"jw_wk":6,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":304,"jw":202,"dk":269,"wk":198,"xf":19,"jw_dk":185,"jw_wk":155,"jw_xf":19,"jw_wk_xf":19}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"points-mall":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":3,"dk":3,"wk":2,"xf":1,"jw_dk":3,"jw_wk":2,"jw_xf":1,"jw_wk_xf":1}},"03-02周":{"AI顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":7,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":5,"jw":3,"dk":3,"wk":2,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":15,"jw":3,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"oral-app":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":22,"jw":9,"dk":17,"wk":7,"xf":2,"jw_dk":8,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":46,"jw":32,"dk":40,"wk":19,"xf":3,"jw_dk":29,"jw_wk":18,"jw_xf":3,"jw_wk_xf":3}},"03-09周":{"AI顾问":{"n":17,"jw":11,"dk":15,"wk":12,"xf":1,"jw_dk":9,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":48,"jw":37,"dk":37,"wk":18,"xf":6,"jw_dk":28,"jw_wk":16,"jw_xf":5,"jw_wk_xf":4}},"03-02周":{"AI顾问":{"n":12,"jw":9,"dk":12,"wk":7,"xf":3,"jw_dk":9,"jw_wk":5,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":51,"jw":32,"dk":45,"wk":25,"xf":6,"jw_dk":30,"jw_wk":20,"jw_xf":6,"jw_wk_xf":6}},"02-23周":{"AI顾问":{"n":3,"jw":1,"dk":2,"wk":2,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":41,"jw":31,"dk":35,"wk":15,"xf":5,"jw_dk":26,"jw_wk":14,"jw_xf":5,"jw_wk_xf":5}},"02-16周":{"AI顾问":{"n":30,"jw":14,"dk":27,"wk":15,"xf":3,"jw_dk":12,"jw_wk":7,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":22,"jw":11,"dk":19,"wk":9,"xf":3,"jw_dk":10,"jw_wk":6,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":11,"jw":6,"dk":9,"wk":5,"xf":2,"jw_dk":6,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2}},"02-02周":{"AI顾问":{"n":6,"jw":3,"dk":6,"wk":3,"xf":0,"jw_dk":3,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":35,"jw":24,"dk":32,"wk":15,"xf":2,"jw_dk":21,"jw_wk":10,"jw_xf":2,"jw_wk_xf":2}},"01-26周":{"AI顾问":{"n":2,"jw":1,"dk":2,"wk":2,"xf":2,"jw_dk":1,"jw_wk":1,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":50,"jw":37,"dk":47,"wk":27,"xf":9,"jw_dk":34,"jw_wk":21,"jw_xf":8,"jw_wk_xf":8}},"01-19周":{"AI顾问":{"n":3,"jw":1,"dk":3,"wk":1,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":54,"jw":32,"dk":40,"wk":23,"xf":5,"jw_dk":27,"jw_wk":18,"jw_xf":4,"jw_wk_xf":4}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":330,"jw":167,"dk":257,"wk":91,"xf":21,"jw_dk":148,"jw_wk":77,"jw_xf":21,"jw_wk_xf":21}},"01-05周":{"AI顾问":{"n":4,"jw":2,"dk":3,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":276,"jw":117,"dk":202,"wk":68,"xf":12,"jw_dk":101,"jw_wk":49,"jw_xf":11,"jw_wk_xf":11}},"12-29周":{"AI顾问":{"n":9,"jw":5,"dk":6,"wk":3,"xf":1,"jw_dk":4,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":237,"jw":95,"dk":172,"wk":55,"xf":8,"jw_dk":81,"jw_wk":46,"jw_xf":8,"jw_wk_xf":8}},"12-22周":{"AI顾问":{"n":13,"jw":3,"dk":11,"wk":4,"xf":0,"jw_dk":3,"jw_wk":3,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":279,"jw":120,"dk":202,"wk":52,"xf":8,"jw_dk":100,"jw_wk":44,"jw_xf":8,"jw_wk_xf":8}}},"xiaohongshu":{"03-23周":{"AI顾问":{"n":90,"jw":19,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":76,"jw":37,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":102,"jw":42,"dk":20,"wk":18,"xf":4,"jw_dk":20,"jw_wk":18,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":218,"jw":155,"dk":99,"wk":68,"xf":8,"jw_dk":97,"jw_wk":67,"jw_xf":8,"jw_wk_xf":8}},"03-09周":{"AI顾问":{"n":4,"jw":2,"dk":2,"wk":0,"xf":0,"jw_dk":2,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":299,"jw":197,"dk":131,"wk":94,"xf":27,"jw_dk":125,"jw_wk":92,"jw_xf":27,"jw_wk_xf":27}},"03-02周":{"AI顾问":{"n":30,"jw":6,"dk":6,"wk":4,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":245,"jw":180,"dk":117,"wk":84,"xf":20,"jw_dk":109,"jw_wk":78,"jw_xf":20,"jw_wk_xf":20}},"02-23周":{"AI顾问":{"n":13,"jw":11,"dk":10,"wk":6,"xf":1,"jw_dk":10,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":304,"jw":222,"dk":157,"wk":129,"xf":27,"jw_dk":148,"jw_wk":123,"jw_xf":26,"jw_wk_xf":26}},"02-16周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":2,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"weibo":{"03-23周":{"AI顾问":{"n":30,"jw":4,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":25,"jw":7,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":52,"jw":11,"dk":8,"wk":5,"xf":0,"jw_dk":7,"jw_wk":5,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":80,"jw":44,"dk":23,"wk":17,"xf":3,"jw_dk":19,"jw_wk":16,"jw_xf":2,"jw_wk_xf":2}},"03-09周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":1,"jw_dk":1,"jw_wk":1,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":25,"jw":17,"dk":15,"wk":13,"xf":2,"jw_dk":14,"jw_wk":12,"jw_xf":2,"jw_wk_xf":2}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}}};
+const CHANNEL_DATA = {"zebra-paid":{"03-23周":{"AI顾问":{"n":5,"jw":5,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":8,"jw":8,"dk":5,"wk":4,"xf":0,"jw_dk":5,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":34,"jw":27,"dk":31,"wk":22,"xf":4,"jw_dk":25,"jw_wk":19,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":78,"jw":72,"dk":69,"wk":55,"xf":20,"jw_dk":65,"jw_wk":52,"jw_xf":19,"jw_wk_xf":19}},"03-09周":{"AI顾问":{"n":43,"jw":35,"dk":39,"wk":25,"xf":4,"jw_dk":34,"jw_wk":25,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":191,"jw":161,"dk":173,"wk":115,"xf":25,"jw_dk":148,"jw_wk":103,"jw_xf":23,"jw_wk_xf":23}},"03-02周":{"AI顾问":{"n":56,"jw":37,"dk":44,"wk":28,"xf":6,"jw_dk":32,"jw_wk":18,"jw_xf":5,"jw_wk_xf":5},"真人顾问":{"n":220,"jw":178,"dk":187,"wk":105,"xf":25,"jw_dk":157,"jw_wk":96,"jw_xf":25,"jw_wk_xf":25}},"02-23周":{"AI顾问":{"n":27,"jw":20,"dk":22,"wk":17,"xf":3,"jw_dk":19,"jw_wk":15,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":82,"jw":70,"dk":77,"wk":60,"xf":20,"jw_dk":67,"jw_wk":54,"jw_xf":19,"jw_wk_xf":19}},"02-16周":{"AI顾问":{"n":76,"jw":45,"dk":59,"wk":41,"xf":8,"jw_dk":40,"jw_wk":29,"jw_xf":7,"jw_wk_xf":7},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":90,"jw":55,"dk":69,"wk":40,"xf":3,"jw_dk":44,"jw_wk":29,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":52,"jw":39,"dk":46,"wk":30,"xf":7,"jw_dk":36,"jw_wk":25,"jw_xf":5,"jw_wk_xf":5}},"02-02周":{"AI顾问":{"n":46,"jw":36,"dk":38,"wk":29,"xf":2,"jw_dk":31,"jw_wk":27,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":270,"jw":217,"dk":247,"wk":168,"xf":31,"jw_dk":205,"jw_wk":151,"jw_xf":30,"jw_wk_xf":30}},"01-26周":{"AI顾问":{"n":11,"jw":7,"dk":10,"wk":6,"xf":1,"jw_dk":7,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":251,"jw":207,"dk":220,"wk":152,"xf":34,"jw_dk":190,"jw_wk":137,"jw_xf":32,"jw_wk_xf":32}},"01-19周":{"AI顾问":{"n":10,"jw":10,"dk":10,"wk":8,"xf":4,"jw_dk":10,"jw_wk":8,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":192,"jw":162,"dk":175,"wk":109,"xf":21,"jw_dk":146,"jw_wk":97,"jw_xf":17,"jw_wk_xf":17}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":154,"jw":137,"dk":141,"wk":132,"xf":24,"jw_dk":127,"jw_wk":120,"jw_xf":24,"jw_wk_xf":24}},"01-05周":{"AI顾问":{"n":5,"jw":5,"dk":5,"wk":4,"xf":2,"jw_dk":5,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":296,"jw":262,"dk":273,"wk":251,"xf":47,"jw_dk":244,"jw_wk":229,"jw_xf":47,"jw_wk_xf":47}},"12-29周":{"AI顾问":{"n":4,"jw":3,"dk":3,"wk":3,"xf":1,"jw_dk":3,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":153,"jw":120,"dk":145,"wk":133,"xf":21,"jw_dk":115,"jw_wk":106,"jw_xf":20,"jw_wk_xf":20}},"12-22周":{"AI顾问":{"n":7,"jw":6,"dk":5,"wk":5,"xf":1,"jw_dk":5,"jw_wk":5,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":110,"jw":97,"dk":108,"wk":100,"xf":28,"jw_dk":95,"jw_wk":90,"jw_xf":26,"jw_wk_xf":26}}},"zebra-divert":{"03-23周":{"AI顾问":{"n":6,"jw":5,"dk":3,"wk":2,"xf":0,"jw_dk":2,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":6,"jw":2,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":18,"jw":10,"dk":15,"wk":10,"xf":0,"jw_dk":9,"jw_wk":9,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":18,"jw":17,"dk":14,"wk":11,"xf":0,"jw_dk":13,"jw_wk":11,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":11,"jw":9,"dk":9,"wk":8,"xf":2,"jw_dk":8,"jw_wk":8,"jw_xf":2,"jw_wk_xf":2}},"02-16周":{"AI顾问":{"n":10,"jw":6,"dk":8,"wk":6,"xf":1,"jw_dk":5,"jw_wk":4,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":12,"jw":7,"dk":11,"wk":10,"xf":0,"jw_dk":7,"jw_wk":7,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":18,"jw":15,"dk":16,"wk":13,"xf":1,"jw_dk":14,"jw_wk":13,"jw_xf":1,"jw_wk_xf":1}},"02-02周":{"AI顾问":{"n":14,"jw":9,"dk":14,"wk":12,"xf":2,"jw_dk":9,"jw_wk":7,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":56,"jw":44,"dk":50,"wk":42,"xf":5,"jw_dk":40,"jw_wk":35,"jw_xf":5,"jw_wk_xf":5}},"01-26周":{"AI顾问":{"n":4,"jw":3,"dk":4,"wk":3,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":33,"jw":27,"dk":30,"wk":28,"xf":1,"jw_dk":26,"jw_wk":26,"jw_xf":1,"jw_wk_xf":1}},"01-19周":{"AI顾问":{"n":2,"jw":1,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":46,"jw":29,"dk":43,"wk":40,"xf":0,"jw_dk":28,"jw_wk":25,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"zebra-mall":{"03-23周":{"AI顾问":{"n":37,"jw":17,"dk":4,"wk":2,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":52,"jw":24,"dk":9,"wk":4,"xf":0,"jw_dk":4,"jw_wk":3,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":88,"jw":61,"dk":71,"wk":48,"xf":1,"jw_dk":53,"jw_wk":40,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":194,"jw":142,"dk":164,"wk":124,"xf":10,"jw_dk":130,"jw_wk":103,"jw_xf":10,"jw_wk_xf":10}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":12,"jw":8,"dk":9,"wk":7,"xf":2,"jw_dk":7,"jw_wk":6,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":34,"jw":24,"dk":29,"wk":21,"xf":3,"jw_dk":20,"jw_wk":17,"jw_xf":3,"jw_wk_xf":3}},"02-16周":{"AI顾问":{"n":34,"jw":17,"dk":27,"wk":16,"xf":2,"jw_dk":16,"jw_wk":10,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":32,"jw":17,"dk":28,"wk":21,"xf":0,"jw_dk":15,"jw_wk":13,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":33,"jw":24,"dk":32,"wk":27,"xf":1,"jw_dk":23,"jw_wk":22,"jw_xf":1,"jw_wk_xf":1}},"02-02周":{"AI顾问":{"n":23,"jw":13,"dk":20,"wk":11,"xf":1,"jw_dk":11,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":139,"jw":96,"dk":127,"wk":94,"xf":9,"jw_dk":90,"jw_wk":73,"jw_xf":8,"jw_wk_xf":8}},"01-26周":{"AI顾问":{"n":5,"jw":3,"dk":4,"wk":3,"xf":0,"jw_dk":2,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":159,"jw":118,"dk":145,"wk":106,"xf":14,"jw_dk":114,"jw_wk":90,"jw_xf":14,"jw_wk_xf":14}},"01-19周":{"AI顾问":{"n":16,"jw":10,"dk":14,"wk":6,"xf":0,"jw_dk":9,"jw_wk":6,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":304,"jw":202,"dk":269,"wk":198,"xf":19,"jw_dk":185,"jw_wk":155,"jw_xf":19,"jw_wk_xf":19}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"points-mall":{"03-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"03-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":3,"dk":3,"wk":2,"xf":1,"jw_dk":3,"jw_wk":2,"jw_xf":1,"jw_wk_xf":1}},"03-02周":{"AI顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":7,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":5,"jw":3,"dk":3,"wk":2,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":15,"jw":3,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"oral-app":{"03-23周":{"AI顾问":{"n":2,"jw":2,"dk":1,"wk":1,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":6,"jw":4,"dk":3,"wk":1,"xf":0,"jw_dk":2,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":22,"jw":9,"dk":17,"wk":7,"xf":2,"jw_dk":8,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":46,"jw":32,"dk":41,"wk":20,"xf":5,"jw_dk":29,"jw_wk":18,"jw_xf":5,"jw_wk_xf":5}},"03-09周":{"AI顾问":{"n":17,"jw":11,"dk":15,"wk":12,"xf":1,"jw_dk":9,"jw_wk":8,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":48,"jw":37,"dk":37,"wk":18,"xf":6,"jw_dk":28,"jw_wk":16,"jw_xf":5,"jw_wk_xf":4}},"03-02周":{"AI顾问":{"n":12,"jw":9,"dk":12,"wk":7,"xf":3,"jw_dk":9,"jw_wk":5,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":51,"jw":32,"dk":45,"wk":25,"xf":6,"jw_dk":30,"jw_wk":20,"jw_xf":6,"jw_wk_xf":6}},"02-23周":{"AI顾问":{"n":3,"jw":1,"dk":2,"wk":2,"xf":0,"jw_dk":1,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":41,"jw":31,"dk":35,"wk":15,"xf":5,"jw_dk":26,"jw_wk":14,"jw_xf":5,"jw_wk_xf":5}},"02-16周":{"AI顾问":{"n":30,"jw":14,"dk":27,"wk":15,"xf":3,"jw_dk":12,"jw_wk":7,"jw_xf":2,"jw_wk_xf":2},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":22,"jw":11,"dk":19,"wk":9,"xf":3,"jw_dk":10,"jw_wk":6,"jw_xf":3,"jw_wk_xf":3},"真人顾问":{"n":11,"jw":6,"dk":9,"wk":5,"xf":2,"jw_dk":6,"jw_wk":4,"jw_xf":2,"jw_wk_xf":2}},"02-02周":{"AI顾问":{"n":6,"jw":3,"dk":6,"wk":3,"xf":0,"jw_dk":3,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":35,"jw":24,"dk":32,"wk":15,"xf":2,"jw_dk":21,"jw_wk":10,"jw_xf":2,"jw_wk_xf":2}},"01-26周":{"AI顾问":{"n":2,"jw":1,"dk":2,"wk":2,"xf":2,"jw_dk":1,"jw_wk":1,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":50,"jw":37,"dk":47,"wk":27,"xf":9,"jw_dk":34,"jw_wk":21,"jw_xf":8,"jw_wk_xf":8}},"01-19周":{"AI顾问":{"n":3,"jw":1,"dk":3,"wk":1,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":54,"jw":32,"dk":40,"wk":23,"xf":5,"jw_dk":27,"jw_wk":18,"jw_xf":4,"jw_wk_xf":4}},"01-12周":{"AI顾问":{"n":15,"jw":10,"dk":11,"wk":5,"xf":0,"jw_dk":7,"jw_wk":4,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":330,"jw":167,"dk":257,"wk":91,"xf":21,"jw_dk":148,"jw_wk":77,"jw_xf":21,"jw_wk_xf":21}},"01-05周":{"AI顾问":{"n":4,"jw":2,"dk":3,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":276,"jw":117,"dk":202,"wk":68,"xf":12,"jw_dk":101,"jw_wk":49,"jw_xf":11,"jw_wk_xf":11}},"12-29周":{"AI顾问":{"n":9,"jw":5,"dk":6,"wk":3,"xf":1,"jw_dk":4,"jw_wk":3,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":237,"jw":95,"dk":172,"wk":55,"xf":8,"jw_dk":81,"jw_wk":46,"jw_xf":8,"jw_wk_xf":8}},"12-22周":{"AI顾问":{"n":13,"jw":3,"dk":11,"wk":4,"xf":0,"jw_dk":3,"jw_wk":3,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":279,"jw":120,"dk":202,"wk":52,"xf":8,"jw_dk":100,"jw_wk":44,"jw_xf":8,"jw_wk_xf":8}}},"xiaohongshu":{"03-23周":{"AI顾问":{"n":106,"jw":31,"dk":2,"wk":2,"xf":0,"jw_dk":2,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":123,"jw":68,"dk":9,"wk":7,"xf":0,"jw_dk":9,"jw_wk":7,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":102,"jw":45,"dk":23,"wk":19,"xf":4,"jw_dk":23,"jw_wk":19,"jw_xf":4,"jw_wk_xf":4},"真人顾问":{"n":218,"jw":157,"dk":101,"wk":70,"xf":12,"jw_dk":100,"jw_wk":70,"jw_xf":12,"jw_wk_xf":12}},"03-09周":{"AI顾问":{"n":4,"jw":2,"dk":2,"wk":0,"xf":0,"jw_dk":2,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":299,"jw":197,"dk":131,"wk":94,"xf":27,"jw_dk":125,"jw_wk":92,"jw_xf":27,"jw_wk_xf":27}},"03-02周":{"AI顾问":{"n":30,"jw":6,"dk":6,"wk":4,"xf":0,"jw_dk":3,"jw_wk":2,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":245,"jw":180,"dk":117,"wk":84,"xf":20,"jw_dk":109,"jw_wk":78,"jw_xf":20,"jw_wk_xf":20}},"02-23周":{"AI顾问":{"n":13,"jw":11,"dk":10,"wk":6,"xf":1,"jw_dk":10,"jw_wk":6,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":304,"jw":222,"dk":157,"wk":129,"xf":27,"jw_dk":148,"jw_wk":123,"jw_xf":26,"jw_wk_xf":26}},"02-16周":{"AI顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":2,"jw":1,"dk":1,"wk":1,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":3,"jw":2,"dk":1,"wk":0,"xf":0,"jw_dk":1,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":1,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}},"weibo":{"03-23周":{"AI顾问":{"n":32,"jw":6,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":31,"jw":10,"dk":2,"wk":1,"xf":0,"jw_dk":2,"jw_wk":1,"jw_xf":0,"jw_wk_xf":0}},"03-16周":{"AI顾问":{"n":52,"jw":13,"dk":8,"wk":5,"xf":1,"jw_dk":7,"jw_wk":5,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":80,"jw":44,"dk":24,"wk":17,"xf":3,"jw_dk":19,"jw_wk":16,"jw_xf":2,"jw_wk_xf":2}},"03-09周":{"AI顾问":{"n":1,"jw":1,"dk":1,"wk":1,"xf":1,"jw_dk":1,"jw_wk":1,"jw_xf":1,"jw_wk_xf":1},"真人顾问":{"n":25,"jw":17,"dk":15,"wk":13,"xf":2,"jw_dk":14,"jw_wk":12,"jw_xf":2,"jw_wk_xf":2}},"03-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-23周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-16周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-09周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"02-02周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-26周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-19周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-12周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"01-05周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-29周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}},"12-22周":{"AI顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0},"真人顾问":{"n":0,"jw":0,"dk":0,"wk":0,"xf":0,"jw_dk":0,"jw_wk":0,"jw_xf":0,"jw_wk_xf":0}}}};
 
 // ══════════════════════════════════════════════════════════════
 // 【数据逻辑说明】（由 update_dashboard.py 每日自动更新）
@@ -687,7 +871,7 @@ function renderKPIs() {
 
 // ─────────────────────── TABLE BUILDER ───────────────────────
 
-const CLICKABLE_COLS = new Set([0, 5, 6, 7, 8]); // 加微率 + 4 个加微数据列
+const CLICKABLE_COLS = new Set([0, 1, 2, 3, 4]); // 加微率 + 4 个加微数据列
 
 function buildTableRows(selectedWeeks, dataset, allowClick = false) {
   const allDataWeeks = WEEKS.filter(w => dataset[w]);
@@ -706,11 +890,10 @@ function buildTableRows(selectedWeeks, dataset, allowClick = false) {
     return ` <span class="${cls}">(${sign}${d.toFixed(1)}%)</span>`;
   };
 
-  // RATE_KEYS 顺序对应 thead 列：加微率 | 到课率..完课转化率 | 加微到课率..加微完课转化率
-  const RATE_KEYS = ['加微率','到课率','完课率','转化率','完课转化率',
-                     '加微到课率','加微完课率','加微转化率','加微完课转化率'];
+  // RATE_KEYS 顺序对应 thead 列：加微率 | 加微到课率..加微完课转化率
+  const RATE_KEYS = ['加微率','加微到课率','加微完课率','加微转化率','加微完课转化率'];
   // 每列对应的边框分隔 class
-  const COL_SEP = ['sep-lr','sep-l','','','sep-r','sep-l','','','sep-r'];
+  const COL_SEP = ['sep-lr','sep-l','','','sep-r'];
 
   const rows = [];
   selectedWeeks.forEach((week, idx) => {
@@ -741,11 +924,15 @@ function buildTableRows(selectedWeeks, dataset, allowClick = false) {
         <td rowspan="2" style="${wStyle};vertical-align:middle;text-align:center;">${week}${endedTag}</td>
         <td><span class="badge badge-ai">AI顾问</span></td>
         <td>${ai.分配人数.toLocaleString()}</td>
+        <td>${ai.转化人数.toLocaleString()}</td>
+        <td class="sep-lr">${pct(ai.转化率)}${diffTag(ai.转化率, hu.转化率)}</td>
         ${aiRateCells}
       </tr>
       <tr class="${huCls}">
         <td><span class="badge badge-human">真人顾问</span></td>
         <td>${hu.分配人数.toLocaleString()}</td>
+        <td>${hu.转化人数.toLocaleString()}</td>
+        <td class="sep-lr">${pct(hu.转化率)}</td>
         ${huRateCells}
       </tr>
     `);
@@ -784,7 +971,9 @@ function orderedSelected(sel) {
 
 // ─────────────────────── CHART HELPER ───────────────────────
 
-const CHART_WEEKS = WEEKS.slice(0, WEEKS.indexOf('02-02周') + 1).reverse(); // 02-02周起，时间正序
+const CHART_WEEKS = WEEKS.slice(0, WEEKS.indexOf('02-02周') + 1)
+  .filter(w => parseWeekDate(w) < TODAY)  // 排除当前所在周（本周开始日 >= 今天，数据不完整）
+  .reverse(); // 时间正序
 const C_AI   = '#7c3aed'; // 紫色 - AI顾问
 const C_HUMAN = '#ea6c00'; // 橙色 - 真人顾问
 
@@ -913,12 +1102,12 @@ function channelTableHTML(chId) {
             <th rowspan="2" style="min-width:70px">统计周期</th>
             <th rowspan="2" style="min-width:80px">顾问类型</th>
             <th rowspan="2">分配人数</th>
+            <th rowspan="2">转化人数</th>
+            <th rowspan="2" class="sep-lr">转化率</th>
             <th rowspan="2" class="sep-lr">加微率</th>
-            <th colspan="4" class="grp sep-l">7日内整体数据</th>
             <th colspan="4" class="grp sep-lr">7日内加微数据</th>
           </tr>
           <tr>
-            <th class="sep-l">到课率</th><th>完课率</th><th>转化率</th><th class="sep-r">完课转化率</th>
             <th class="sep-l">加微到课率</th><th>加微完课率</th><th>加微转化率</th><th class="sep-r">加微完课转化率</th>
           </tr>
         </thead>
@@ -964,7 +1153,6 @@ document.getElementById('tbody-m2').addEventListener('click', e => {
 
 const ATTR_METRICS = [
   { key: '加微率',         numKey: 'jw',       denKey: 'n',     mixKey: 'n',     mixLabel: '分配人数', desc: '加微人数 / 分配人数' },
-  null, null, null, null, // 1-4 不可点击
   { key: '加微到课率',     numKey: 'jw_dk',    denKey: 'jw',    mixKey: 'jw',    mixLabel: '加微人数', desc: '加微到课 / 加微人数' },
   { key: '加微完课率',     numKey: 'jw_wk',    denKey: 'jw',    mixKey: 'jw',    mixLabel: '加微人数', desc: '加微完课 / 加微人数' },
   { key: '加微转化率',     numKey: 'jw_xf',    denKey: 'jw',    mixKey: 'jw',    mixLabel: '加微人数', desc: '加微转化 / 加微人数' },
@@ -1102,19 +1290,20 @@ function renderAttrContent(data, metric, week) {
     <div class="attr-kpi-lbl">真人顾问 ${metric.key}</div>
     <div class="attr-kpi-val" style="color:#ea6c00">${pct(rateHU)}</div>
     <div class="attr-kpi-desc">${metric.mixLabel} ${totHU.num.toLocaleString()} / ${totHU.den.toLocaleString()}</div>`;
-  const gapSign  = gap >= 0 ? '+' : '';
-  const gapColor = gap >= 0 ? '#2e7d32' : '#c62828';
-  const gapDir   = gap < 0 ? 'AI 低于真人' : gap > 0 ? 'AI 高于真人' : '两者持平';
+  const displayGap = -gap; // AI − 真人（gap 内部为 真人−AI，展示时取反）
+  const gapSign  = displayGap >= 0 ? '+' : '';
+  const gapColor = displayGap >= 0 ? '#2e7d32' : '#c62828';
+  const gapDir   = displayGap > 0 ? 'AI 高于真人' : displayGap < 0 ? 'AI 低于真人' : '两者持平';
   document.getElementById('attr-kpi-gap').innerHTML = `
     <div class="attr-kpi-lbl">差距（AI − 真人）</div>
-    <div class="attr-kpi-val" style="color:${gapColor}">${gapSign}${(gap*100).toFixed(1)}pp</div>
+    <div class="attr-kpi-val" style="color:${gapColor}">${gapSign}${(displayGap*100).toFixed(1)}pp</div>
     <div class="attr-kpi-desc">${gapDir}</div>`;
 
   // Decomposition cards
   const mixSign = mixEffect >= 0 ? '+' : '';
   const rateSign = rateEffect >= 0 ? '+' : '';
-  const mixColor  = mixEffect  >= 0 ? '#2e7d32' : '#c62828';
-  const rateColor = rateEffect >= 0 ? '#2e7d32' : '#c62828';
+  const mixColor  = mixEffect  >= 0 ? '#2e7d32' : '#c62828'; // 正=AI结构优势=绿，负=劣势=红
+  const rateColor = rateEffect >= 0 ? '#c62828' : '#2e7d32'; // 正=真人渠道内更优（对AI是坏事）=红，负=AI更优=绿
 
   const mixDesc = Math.abs(mixEffect) < 0.0005
     ? '渠道结构差异对整体指标几乎无影响。'
@@ -1150,7 +1339,7 @@ function renderAttrContent(data, metric, week) {
     .sort((a, b) => Math.abs(b.hu.rate - b.ai.rate) - Math.abs(a.hu.rate - a.ai.rate))
     .slice(0, 2);
   const totalGapPP = (Math.abs(gap) * 100).toFixed(1);
-  const gapDirFull = gap < 0 ? `低于真人 ${totalGapPP}pp` : gap > 0 ? `高于真人 ${totalGapPP}pp` : '与真人持平';
+  const gapDirFull = gap > 0 ? `低于真人 ${totalGapPP}pp` : gap < 0 ? `高于真人 ${totalGapPP}pp` : '与真人持平';
   const mainDriver = Math.abs(mixEffect) >= Math.abs(rateEffect) ? '渠道结构' : '渠道内部表现差异';
 
   const mixLine = topMixDiff.length > 0
@@ -1183,7 +1372,7 @@ function renderAttrCharts(data, metric) {
   // 按 AI顾问 渠道占比由高到低排序
   const activeChannels = channels
     .filter(ch => ch.ai.raw.mix > 0 || ch.hu.raw.mix > 0)
-    .sort((a, b) => b.ai.mixShare - a.ai.mixShare);
+    .sort((a, b) => a.ai.mixShare - b.ai.mixShare);
   const chNames = activeChannels.map(ch => ch.name);
 
   // Chart 1: channel mix (horizontal grouped bar)
@@ -1322,6 +1511,29 @@ async function triggerRefresh() {
     setBtnLoading(false);
     showToast("⚠️ 无法连接本地服务，请确认你的 Mac 正在运行看板服务", 6000);
   }
+}
+
+// ─────────────────────── 周报展开/折叠 ───────────────────────
+
+function toggleReport(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+// ─────────────────────── 周报位置对齐（JS辅助）───────────────────────
+// 读取模块2/3在主栏的Y偏移，动态给周报面板顶部加 padding，
+// 使"模块2"块与左侧模块2对齐（仅首条展开的周报）
+function alignReportPanel() {
+  const panel = document.getElementById('report-panel');
+  const m2 = document.getElementById('section-m2');
+  if (!panel || !m2) return;
+  const panelTop = panel.getBoundingClientRect().top + panel.scrollTop;
+  const m2Top = m2.getBoundingClientRect().top + window.scrollY;
+  // 侧边栏顶部已有 18px padding + 报头，粗略估算报头高度约44px
+  const hdHeight = 44;
+  const offset = Math.max(0, m2Top - hdHeight - 18);
+  // 不强制 padding（内容自然从顶部开始，用户滚动侧栏）
+  // 此函数保留以便后续扩展
 }
 
 // 线上和本地都显示按钮，但行为不同
